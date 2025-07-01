@@ -1,9 +1,9 @@
 import java.util.Objects;
 
 public class Task {
+    private final int id;
     private String title;
     private Status status;
-    private int id;
     private String description;
 
     {
@@ -44,6 +44,10 @@ public class Task {
         return status;
     }
 
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
@@ -59,5 +63,14 @@ public class Task {
     static class Stat{
         public static int counter = 0;
         public static int id;
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getName() + "{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", status=" + status +
+                '}';
     }
 }

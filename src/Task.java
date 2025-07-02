@@ -1,15 +1,17 @@
 import java.util.Objects;
 
 public class Task {
-    private final int id;
+    private int id = -1;
     private String title;
-    private Status status;
+    private Status status = Status.NEW;
     private String description;
 
-    {
-        status = Status.NEW;
-        id = ++Stat.id;
-        Stat.counter++;
+    public void setId(int id) {
+        if (this.id == -1) {
+            this.id = id;
+        } else {
+            throw new UnsupportedOperationException("Изменение id задачи запрещено");
+        }
     }
 
     public Task(String title, String description) {
@@ -58,11 +60,6 @@ public class Task {
     @Override
     public int hashCode() {
         return Objects.hashCode(id);
-    }
-
-    static class Stat{
-        public static int counter = 0;
-        public static int id;
     }
 
     @Override

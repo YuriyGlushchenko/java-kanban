@@ -1,22 +1,22 @@
-public class SubTask extends Task{
-    private EpicTask parentEpicTask;
+public class SubTask extends Task {
+    private Epic parentEpic;
 
-    public SubTask(String title, String description, EpicTask parentEpicTask) {
+    public SubTask(String title, String description, Epic parentEpic) {
         super(title, description);
-        this.parentEpicTask = parentEpicTask;
+        this.parentEpic = parentEpic;
     }
 
-    public SubTask(EpicTask parentEpicTask) {
-        this.parentEpicTask = parentEpicTask;
+    public SubTask(Epic parentEpic) {
+        this.parentEpic = parentEpic;
     }
 
-    public EpicTask getParentEpicTask() {
-        return parentEpicTask;
+    public Epic getParentEpic() {
+        return parentEpic;
     }
 
     @Override
     public void setStatus(Status status) {
         super.setStatus(status);
-        parentEpicTask.checkEpicStatus();
+        parentEpic.checkEpicStatus();
     }
 }

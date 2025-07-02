@@ -1,22 +1,16 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class EpicTask extends Task {
-    private final HashMap<Integer, SubTask> subTasks;
-    private boolean allIsDone;
-    private boolean inProgress;
+public class Epic extends Task {
+    private final HashMap<Integer, SubTask> subTasks = new HashMap<>();
+    private boolean allIsDone = false;
+    private boolean inProgress = false;
 
-    {
-        subTasks = new HashMap<>();
-        allIsDone = false;
-        inProgress = false;
-    }
-
-    public EpicTask(String title, String description) {
+    public Epic(String title, String description) {
         super(title, description);
     }
 
-    public void addSubTask(SubTask subTask) {
+    public void addSubTaskToEpic(SubTask subTask) {
         subTasks.put(subTask.getId(), subTask);
     }
 
@@ -24,19 +18,16 @@ public class EpicTask extends Task {
         return new ArrayList<>(subTasks.values());
     }
 
-    public void removeFromSubTasks(int id) {
+    public void removeFromEpicSubTasks(int id) {
         subTasks.remove(id);
         checkEpicStatus();
     }
 
     @Override
     public void setStatus(Status status) {
-//        throw new UnsupportedOperationException("Прямая смена статуса в Epic запрещена");
-        if (allIsDone && status == Status.DONE) { // можно переписать на switch или DRY
-            super.setStatus(status);
-        } else if (inProgress && status == Status.IN_PROGRESS) {
-            super.setStatus(status);
-        } else if (!allIsDone && !inProgress && status == Status.NEW) {
+        if ((allIsDone && status == Status.DONE)
+                || (inProgress && status == Status.IN_PROGRESS)
+                || (!allIsDone && !inProgress && status == Status.NEW)) {
             super.setStatus(status);
         }
     }

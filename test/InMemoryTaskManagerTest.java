@@ -32,36 +32,39 @@ class InMemoryTaskManagerTest {
         task2Id = manager.addNewTask(task2);
 
         epic1 = new Epic("Важный эпик1", "описние эпика 1");
+        epic2 = new Epic("Важный эпик2", "описние эпика 2");
         epic1Id = manager.addNewTask(epic1);
+        epic2Id = manager.addNewTask(epic2);
+
         subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1);
         subTask1Id = manager.addNewTask(subTask1);
         subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1);
         subTask2Id = manager.addNewTask(subTask2);
-
     }
+
     @Test
-    public void shouldFindTask2ByTask2Id(){
+    public void shouldFindTask2ByTask2Id() {
         assertEquals(task2, manager.getTaskById(task2Id));
     }
 
     @Test
-    public void shouldFindEpic1ByEpic1Id(){
+    public void shouldFindEpic1ByEpic1Id() {
         assertEquals(epic1, manager.getTaskById(epic1Id));
     }
 
     @Test
-    public void shouldFindSubTask1BySubTask1Id(){
+    public void shouldFindSubTask1BySubTask1Id() {
         assertEquals(subTask1, manager.getTaskById(subTask1Id));
     }
 
     @Test
-    public void shouldReturnEmptyHistoryListOnNewTasks(){
+    public void shouldReturnEmptyHistoryListOnNewTasks() {
         System.out.println(manager.getHistory());
         assertTrue(manager.getHistory().isEmpty());
     }
 
     @Test
-    public void shouldReturnCorrectSizeOfHistoryListAfterTaskView(){
+    public void shouldReturnCorrectSizeOfHistoryListAfterTaskView() {
         manager.getTaskById(epic1Id);
         manager.getTaskById(task2Id);
         manager.getTaskById(task1Id);
@@ -69,11 +72,36 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    public void shouldReturnTaskInHistoryListAfterTaskView(){
+    public void shouldReturnTaskInHistoryListAfterTaskView() {
         manager.getTaskById(epic1Id);
         LinkedList<Task> expectedList = new LinkedList<>();
         expectedList.add(epic1);
         assertIterableEquals(expectedList, manager.getHistory());
+    }
+
+    @Test
+    public void ShouldBeTheSameTaskIfIDsMatch() {
+        Task savedTask = manager.getTaskById(task1Id);
+        assertNotNull(savedTask, "Задача не найдена.");
+        assertEquals(task1, savedTask, "Задачи не совпадают.");
+
+        Task savedEpic = manager.getTaskById(epic1Id);
+        assertNotNull(savedEpic, "Задача не найдена.");
+        assertEquals(epic1, savedEpic, "Задачи не совпадают.");
+    }
+
+    @Test
+    public void ShouldBeTheSameEpicIfIDsMatch() {
+        Task savedEpic = manager.getTaskById(epic1Id);
+        assertNotNull(savedEpic, "Задача не найдена.");
+        assertEquals(epic1, savedEpic, "Задачи не совпадают.");
+    }
+
+    @Test
+    public void ShouldBeTheSameSubTaskIfIDsMatch() {
+        Task savedSubTask = manager.getTaskById(subTask1Id);
+        assertNotNull(savedSubTask, "Задача не найдена.");
+        assertEquals(subTask1, savedSubTask, "Задачи не совпадают.");
     }
 
 

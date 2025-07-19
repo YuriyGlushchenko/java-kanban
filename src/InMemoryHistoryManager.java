@@ -8,6 +8,13 @@ public class InMemoryHistoryManager implements HistoryManager{
     @Override
     public void add(Task task) {
         historyList.addLast(task);
+        // В ТЗ не указано, история просмотров? или история изменений, тогда нужен clone:
+//        try{
+//            historyList.addLast((Task) super.clone());
+//        } catch (CloneNotSupportedException e){
+//            throw new AssertionError("Класс поддерживает клонирование", e);
+//        }
+
         if(historyList.size() > HISTORY_LIMIT){
             historyList.removeFirst();
         }

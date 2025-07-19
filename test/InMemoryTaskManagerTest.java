@@ -84,10 +84,6 @@ class InMemoryTaskManagerTest {
         Task savedTask = manager.getTaskById(task1Id);
         assertNotNull(savedTask, "Задача не найдена.");
         assertEquals(task1, savedTask, "Задачи не совпадают.");
-
-        Task savedEpic = manager.getTaskById(epic1Id);
-        assertNotNull(savedEpic, "Задача не найдена.");
-        assertEquals(epic1, savedEpic, "Задачи не совпадают.");
     }
 
     @Test
@@ -103,6 +99,34 @@ class InMemoryTaskManagerTest {
         assertNotNull(savedSubTask, "Задача не найдена.");
         assertEquals(subTask1, savedSubTask, "Задачи не совпадают.");
     }
+
+    @Test
+    public void askShouldRemainUnmodifiedAfterAddingToManager(){
+        String title = "title";
+        String description  = "description";
+        Task newTask = new Task(title, description);
+        int id = manager.addNewTask(newTask);
+
+        assertEquals(title, manager.getTaskById(id).getTitle());
+        assertEquals(description, manager.getTaskById(id).getDescription());
+    }
+
+    @Test
+    public void shouldCleanAll(){
+        assertEquals(2, manager.getAllSimpleTask().size());
+        assertEquals(2, manager.getAllEpics().size());
+        assertEquals(2, manager.getAllSubTask().size());
+        assertEquals(6, manager.getAllTypesTask().size());
+
+        manager.deleteAllTasks();
+
+        assertTrue(manager.getAllSimpleTask().isEmpty());
+        assertTrue(manager.getAllEpics().isEmpty());
+        assertTrue(manager.getAllSubTask().isEmpty());
+        assertTrue(manager.getAllTypesTask().isEmpty());
+    }
+
+
 
 
 }

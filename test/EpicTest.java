@@ -19,6 +19,7 @@ class EpicTest {
     public void beforeEach() {
         manager = new InMemoryTaskManager();
 
+        // Создаём 2 эпика. У первого будет 2 подзадачи. Второй пустой.
         epic1 = new Epic("Важный эпик1", "описние эпика 1");
         epic2 = new Epic("Важный эпик2", "описние эпика 2");
         epic1Id = manager.addNewTask(epic1);
@@ -28,8 +29,6 @@ class EpicTest {
         subTask1Id = manager.addNewTask(subTask1);
         subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1);
         subTask2Id = manager.addNewTask(subTask2);
-
-
     }
 
     @Test
@@ -66,6 +65,27 @@ class EpicTest {
         epic1.removeFromEpicSubTasks(subTask1Id);
         epic1.removeFromEpicSubTasks(subTask2Id);
         assertEquals(Status.NEW, epic1.getStatus());
+    }
+
+    @Test
+    public void shouldDeleteSubTaskFromEpic() {
+        assertEquals(2, epic1.getEpicSubTasks().size());
+        assertTrue(epic1.getEpicSubTasks().contains(subTask1));
+        assertTrue(epic1.getEpicSubTasks().contains(subTask2));
+
+        epic1.removeFromEpicSubTasks(subTask1Id);
+        epic1.removeFromEpicSubTasks(subTask2Id);
+
+        assertEquals(0, epic1.getEpicSubTasks().size());
+        assertFalse(epic1.getEpicSubTasks().contains(subTask1));
+        assertFalse(epic1.getEpicSubTasks().contains(subTask2));
+    }
+
+    @Test
+    public void shouldAddSubTaskToEpic() {
+        assertFalse(epic2.getEpicSubTasks().contains(subTask1));
+        epic2.addSubTaskToEpic(subTask1);
+        assertTrue(epic2.getEpicSubTasks().contains(subTask1));
     }
 
 

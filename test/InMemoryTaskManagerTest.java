@@ -2,6 +2,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedList;
+import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,8 +32,8 @@ class InMemoryTaskManagerTest {
         task2 = new Task("Простая задача2", "Описание простой задачи 2");
         task2Id = manager.addNewTask(task2);
 
-        epic1 = new Epic("Важный эпик1", "описние эпика 1");
-        epic2 = new Epic("Важный эпик2", "описние эпика 2");
+        epic1 = new Epic("Важный эпик1", "Описание эпика 1");
+        epic2 = new Epic("Важный эпик2", "Описание эпика 2");
         epic1Id = manager.addNewTask(epic1);
         epic2Id = manager.addNewTask(epic2);
 
@@ -44,17 +45,17 @@ class InMemoryTaskManagerTest {
 
     @Test
     public void shouldFindTask2ByTask2Id() {
-        assertEquals(task2, manager.getTaskById(task2Id));
+        assertEquals(task2, manager.getAnyTypeTaskById(task2Id));
     }
 
     @Test
     public void shouldFindEpic1ByEpic1Id() {
-        assertEquals(epic1, manager.getTaskById(epic1Id));
+        assertEquals(epic1, manager.getAnyTypeTaskById(epic1Id));
     }
 
     @Test
     public void shouldFindSubTask1BySubTask1Id() {
-        assertEquals(subTask1, manager.getTaskById(subTask1Id));
+        assertEquals(subTask1, manager.getAnyTypeTaskById(subTask1Id));
     }
 
     @Test
@@ -65,15 +66,15 @@ class InMemoryTaskManagerTest {
 
     @Test
     public void shouldReturnCorrectSizeOfHistoryListAfterTaskView() {
-        manager.getTaskById(epic1Id);
-        manager.getTaskById(task2Id);
-        manager.getTaskById(task1Id);
+        manager.getAnyTypeTaskById(epic1Id);
+        manager.getAnyTypeTaskById(task2Id);
+        manager.getAnyTypeTaskById(task1Id);
         assertEquals(3, manager.getHistory().size());
     }
 
     @Test
     public void shouldReturnTaskInHistoryListAfterTaskView() {
-        manager.getTaskById(epic1Id);
+        manager.getAnyTypeTaskById(epic1Id);
         LinkedList<Task> expectedList = new LinkedList<>();
         expectedList.add(epic1);
         assertIterableEquals(expectedList, manager.getHistory());
@@ -81,21 +82,21 @@ class InMemoryTaskManagerTest {
 
     @Test
     public void ShouldBeTheSameTaskIfIDsMatch() {
-        Task savedTask = manager.getTaskById(task1Id);
+        Task savedTask = manager.getAnyTypeTaskById(task1Id);
         assertNotNull(savedTask, "Задача не найдена.");
         assertEquals(task1, savedTask, "Задачи не совпадают.");
     }
 
     @Test
     public void ShouldBeTheSameEpicIfIDsMatch() {
-        Task savedEpic = manager.getTaskById(epic1Id);
+        Task savedEpic = manager.getAnyTypeTaskById(epic1Id);
         assertNotNull(savedEpic, "Задача не найдена.");
         assertEquals(epic1, savedEpic, "Задачи не совпадают.");
     }
 
     @Test
     public void ShouldBeTheSameSubTaskIfIDsMatch() {
-        Task savedSubTask = manager.getTaskById(subTask1Id);
+        Task savedSubTask = manager.getAnyTypeTaskById(subTask1Id);
         assertNotNull(savedSubTask, "Задача не найдена.");
         assertEquals(subTask1, savedSubTask, "Задачи не совпадают.");
     }
@@ -107,25 +108,70 @@ class InMemoryTaskManagerTest {
         Task newTask = new Task(title, description);
         int id = manager.addNewTask(newTask);
 
-        assertEquals(title, manager.getTaskById(id).getTitle());
-        assertEquals(description, manager.getTaskById(id).getDescription());
+        assertEquals(title, manager.getAnyTypeTaskById(id).getTitle());
+        assertEquals(description, manager.getAnyTypeTaskById(id).getDescription());
     }
 
     @Test
     public void shouldCleanAll(){
-        assertEquals(2, manager.getAllSimpleTask().size());
+        assertEquals(2, manager.getTasks().size());
         assertEquals(2, manager.getAllEpics().size());
         assertEquals(2, manager.getAllSubTask().size());
         assertEquals(6, manager.getAllTypesTask().size());
 
         manager.deleteAllTasks();
 
-        assertTrue(manager.getAllSimpleTask().isEmpty());
+        assertTrue(manager.getTasks().isEmpty());
         assertTrue(manager.getAllEpics().isEmpty());
         assertTrue(manager.getAllSubTask().isEmpty());
         assertTrue(manager.getAllTypesTask().isEmpty());
     }
 
+
+    @Test
+    void getTaskByIdShouldReturnTask() {
+        Task actualTask = manager.getTaskById(task1Id);
+        assertEquals(task1, actualTask, "Метод вернул не ту задачу");
+    }
+
+    @Test
+    void getTaskByIdShouldThrowWhenTaskDoesNotExist() {
+        assertThrows(
+                NoSuchElementException.class,
+                () -> manager.getTaskById(-11),
+                "Метод должен кидать NoSuchElementException, если задача не найдена"
+        );
+    }
+
+    @Test
+    void getEpicByIdShouldReturnEpic() {
+        Epic actualEpic = manager.getEpicById(epic1Id);
+        assertEquals(epic1, actualEpic, "Метод вернул не ту задачу");
+    }
+
+    @Test
+    void getEpicByIdShouldThrowWhenTaskDoesNotExist() {
+        assertThrows(
+                NoSuchElementException.class,
+                () -> manager.getEpicById(-11),
+                "Метод должен кидать NoSuchElementException, если задача не найдена"
+        );
+    }
+
+    @Test
+    void getSubTaskByIdShouldReturnSubTask() {
+        SubTask actualSubTask = manager.getSubTaskById(subTask1Id);
+        assertEquals(subTask1, actualSubTask, "Метод вернул не ту задачу");
+    }
+
+    @Test
+    void getSubTaskByIdShouldThrowWhenTaskDoesNotExist() {
+        assertThrows(
+                NoSuchElementException.class,
+                () -> manager.getSubTaskById(-11),
+                "Метод должен кидать NoSuchElementException, если задача не найдена"
+        );
+    }
 
 
 

@@ -1,4 +1,3 @@
-import java.util.ArrayList;
 
 public class Main {
 
@@ -24,14 +23,14 @@ public class Main {
 
     private static void printAllTasks(TaskManager manager) {
         System.out.println("Задачи:");
-        for (Task task : manager.getAllSimpleTask()) {
+        for (Task task : manager.getTasks()) {
             System.out.println(task);
         }
         System.out.println("Эпики:");
         for (Epic epic : manager.getAllEpics()) {
             System.out.println(epic);
 
-            for (Task task : manager.getEpicSubTasks(epic)) {
+            for (Task task : manager.getEpicSubTasks(epic.getId())) {
                 System.out.println("--> " + task);
             }
         }
@@ -45,9 +44,9 @@ public class Main {
             System.out.println(task);
         }
 
-        manager.getTaskById(1);
-        manager.getTaskById(2);
-        manager.getTaskById(3);
+        manager.getAnyTypeTaskById(1);
+        manager.getAnyTypeTaskById(2);
+        manager.getAnyTypeTaskById(3);
 
         System.out.println("История после вызова getTaskById:");
         for (Task task : manager.getHistory()) {

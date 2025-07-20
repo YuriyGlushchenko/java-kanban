@@ -11,7 +11,7 @@ public class InMemoryTaskManager implements TaskManager {
 
 
     @Override
-    public ArrayList<Task> getAllSimpleTask() {
+    public ArrayList<Task> getTasks() {
         return new ArrayList<>(tasks.values());
     }
 
@@ -28,7 +28,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public ArrayList<Task> getAllTypesTask() {
-        ArrayList<Task> allTasks = getAllSimpleTask();
+        ArrayList<Task> allTasks = getTasks();
         allTasks.addAll(getAllEpics());
         allTasks.addAll(getAllSubTask());
         return allTasks;
@@ -43,7 +43,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Task getTaskById(int id) {
+    public Task getAnyTypeTaskById(int id) {
         Optional<? extends Task>  requestedTaskOptional = Stream.of(tasks, subTasks, epics)
                 .filter(hMap -> hMap.containsKey(id))
                 .map(hMap -> hMap.get(id))
@@ -52,6 +52,39 @@ public class InMemoryTaskManager implements TaskManager {
             Task requestedTask = requestedTaskOptional.get();
             addTaskToHistory(requestedTask);
             return requestedTask;
+        } else {
+            throw new NoSuchElementException("Нет задачи с таким id");
+        }
+    }
+
+    @Override
+    public Task getTaskById(int id) {
+        Task requestedTask = tasks.get(id);
+        if(requestedTask!= null){
+            addTaskToHistory(requestedTask);
+            return requestedTask;
+        } else {
+            throw new NoSuchElementException("Нет задачи с таким id");
+        }
+    }
+
+    @Override
+    public Epic getEpicById(int id) {
+        Epic requestedEpic = epics.get(id);
+        if(requestedEpic!= null){
+            addTaskToHistory(requestedEpic);
+            return requestedEpic;
+        } else {
+            throw new NoSuchElementException("Нет задачи с таким id");
+        }
+    }
+
+    @Override
+    public SubTask getSubTaskById(int id) {
+        SubTask requestedSubTask = subTasks.get(id);
+        if(requestedSubTask!= null){
+            addTaskToHistory(requestedSubTask);
+            return requestedSubTask;
         } else {
             throw new NoSuchElementException("Нет задачи с таким id");
         }
@@ -83,7 +116,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteTask(int id) {
-        Task taskToDelete = getTaskById(id);
+        Task taskToDelete = getAnyTypeTaskById(id);
         if (taskToDelete instanceof Epic epic) {
             for (SubTask subTask : epic.getEpicSubTasks()) {
                 deleteTask(subTask.getId());
@@ -99,8 +132,8 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public ArrayList<SubTask> getEpicSubTasks(Epic epic) {
-        return epic.getEpicSubTasks();
+    public ArrayList<SubTask> getEpicSubTasks(int id) {
+        return epics.get(id).getEpicSubTasks();
     }
 
     private void addTaskToHistory(Task task){

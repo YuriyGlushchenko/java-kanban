@@ -1,6 +1,8 @@
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryHistoryManagerTest {
@@ -47,10 +49,96 @@ class InMemoryHistoryManagerTest {
         historyManager.add(task1);
         assertTrue(historyManager.getHistory().contains(task1));
 
-        historyManager.delete(task1);
+        historyManager.remove(task1.getId());
         assertFalse(historyManager.getHistory().contains(task1));
     }
 
+    @Test
+    void addShouldReplaceDuplicateTask() {
+        historyManager.add(task1);
+        historyManager.add(task2);
+        historyManager.add(task1); // Дубликат, должен переместиться в конец
 
+        assertEquals(List.of(task2, task1), historyManager.getHistory());
+    }
 
+    @Test
+    void addShouldMaintainOrderAfterMultipleAdds() {
+        historyManager.add(task1);
+        historyManager.add(task2);
+        historyManager.add(epic1);
+        historyManager.add(epic2);
+        historyManager.add(subTask1);
+        historyManager.add(subTask2);
+
+        assertEquals(List.of(task1, task2, epic1, epic2, subTask1, subTask2), historyManager.getHistory());
+    }
+
+    @Test
+    void removeShouldDeleteTaskFromBeginning() {
+        historyManager.add(task1);
+        historyManager.add(task2);
+
+        historyManager.remove(1); // Удаляем первую задачу
+
+        assertEquals(List.of(task2), historyManager.getHistory());
+    }
+
+    @Test
+    void removeShouldDeleteTaskFromMiddle() {
+        historyManager.add(task1);
+        historyManager.add(task2);
+        historyManager.add(epic1);
+        historyManager.add(subTask1);
+
+        historyManager.remove(2); // Удаляем из середины
+
+        assertEquals(List.of(task1, epic1, subTask1), historyManager.getHistory());
+    }
+
+    @Test
+    void removeShouldDeleteTaskFromEnd() {
+        historyManager.add(task1);
+        historyManager.add(task2);
+
+        historyManager.remove(2); // Удаляем последнюю
+
+        assertEquals(List.of(task1), historyManager.getHistory());
+    }
+
+    @Test
+    void removeShouldDoNothingIfTaskNotExists() {
+        historyManager.add(task1);
+
+        historyManager.remove(999); // Несуществующий ID
+
+        assertEquals(List.of(task1), historyManager.getHistory());
+    }
+
+    @Test
+    void clearHistoryShouldRemoveAllTasks() {
+        historyManager.add(task1);
+        historyManager.add(task2);
+        assertEquals(List.of(task1, task2), historyManager.getHistory());
+
+        historyManager.clearHistory();
+
+        assertTrue(historyManager.getHistory().isEmpty());
+    }
+
+    @Test
+    void getHistoryShouldReturnEmptyListIfNoTasks() {
+        assertTrue(historyManager.getHistory().isEmpty());
+    }
+
+    @Test
+    void getHistory_ShouldReturnTasksInCorrectOrder() {
+        historyManager.add(task1);
+        historyManager.add(epic1);
+        historyManager.add(task2);
+        historyManager.add(epic2);
+        historyManager.add(subTask1);
+
+        assertEquals(List.of(task1, epic1,  task2, epic2, subTask1), historyManager.getHistory());
+    }
 }

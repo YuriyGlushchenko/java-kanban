@@ -145,7 +145,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     private void deleteFromHistory(Task task){
-        historyManager.delete(task);
+        historyManager.remove(task.getId());
     }
 
 }

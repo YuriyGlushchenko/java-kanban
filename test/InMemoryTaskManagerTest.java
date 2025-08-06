@@ -1,7 +1,9 @@
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.awt.*;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -102,9 +104,9 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    public void askShouldRemainUnmodifiedAfterAddingToManager(){
+    public void askShouldRemainUnmodifiedAfterAddingToManager() {
         String title = "title";
-        String description  = "description";
+        String description = "description";
         Task newTask = new Task(title, description);
         int id = manager.addNewTask(newTask);
 
@@ -113,7 +115,7 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    public void shouldCleanAll(){
+    public void shouldCleanAll() {
         assertEquals(2, manager.getTasks().size());
         assertEquals(2, manager.getAllEpics().size());
         assertEquals(2, manager.getAllSubTask().size());
@@ -173,6 +175,14 @@ class InMemoryTaskManagerTest {
         );
     }
 
+    @Test
+    void testNoStaleSubTaskIdsInEpicAfterDeletion() {
+        assertEquals(List.of(subTask1, subTask2), manager.getEpicSubTasks(epic1Id));
+        manager.deleteTask(subTask1Id);
+        manager.deleteTask(subTask2Id);
 
+        assertFalse(epic1.getEpicSubTasks().stream() //Внутри эпиков не должно оставаться неактуальных id подзадач.
+                .anyMatch(subTask -> (subTask.getId() == subTask1Id) || (subTask.getId() == subTask2Id)));
+    }
 
 }

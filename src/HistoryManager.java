@@ -5,8 +5,8 @@ public interface HistoryManager {
 
      List<Task> getHistory();
 
-     void delete(Task task);  // можно вообще добавлять свои методы в интерфейс кроме двух обязательных по условию?
-
      void clearHistory();
+
+     void remove(int id);
 }
 

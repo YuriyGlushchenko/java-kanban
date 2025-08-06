@@ -38,7 +38,7 @@ class InMemoryHistoryManagerTest {
     }
 
     @Test
-    public void ShouldAddTaskToHistory(){
+    public void ShouldAddTaskToHistory() {
         Task task1 = new Task("Простая задача1", "Описание простой задачи 1");
         task1.setId(10);
         historyManager.add(task1);
@@ -46,7 +46,7 @@ class InMemoryHistoryManagerTest {
     }
 
     @Test
-    public void ShouldDeleteTaskFromHistory(){
+    public void ShouldDeleteTaskFromHistory() {
         assertFalse(historyManager.getHistory().contains(task1));
         historyManager.add(task1);
         historyManager.add(task1);
@@ -143,6 +143,6 @@ class InMemoryHistoryManagerTest {
         historyManager.add(epic2);
         historyManager.add(subTask1);
 
-        assertEquals(List.of(task1, epic1,  task2, epic2, subTask1), historyManager.getHistory());
+        assertEquals(List.of(task1, epic1, task2, epic2, subTask1), historyManager.getHistory());
     }
 }

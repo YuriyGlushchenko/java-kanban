@@ -1,3 +1,8 @@
+import model.Epic;
+import model.SubTask;
+import model.Task;
+import service.Managers;
+import service.TaskManager;
 
 public class Main {
 
@@ -16,6 +21,11 @@ public class Main {
         manager.addNewTask(subTask1);
         SubTask subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1);
         manager.addNewTask(subTask2);
+        SubTask subTask3 = new SubTask("Подзадача 3", "описание подзадачи3", epic1);
+        manager.addNewTask(subTask3);
+
+        Epic epic2 = new Epic("Важный эпик2", "описние эпика 2");
+        manager.addNewTask(epic2);
 
 
         printAllTasks(manager);
@@ -47,8 +57,11 @@ public class Main {
         manager.getAnyTypeTaskById(1);
         manager.getAnyTypeTaskById(2);
         manager.getAnyTypeTaskById(3);
+        manager.getAnyTypeTaskById(3);
+        manager.getAnyTypeTaskById(4);
+        manager.getAnyTypeTaskById(3);
 
-        System.out.println("История после вызова getTaskById:");
+        System.out.println("История после вызова getTaskById (вызов в порядке 1,2,3,3,4,3):");
         for (Task task : manager.getHistory()) {
             System.out.println(task);
         }

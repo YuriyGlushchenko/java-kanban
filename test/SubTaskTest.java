@@ -1,10 +1,13 @@
+import model.Epic;
+import model.Status;
+import model.SubTask;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class SubTaskTest {
-    private final Epic testEpic = new Epic("Epic Title", "Epic Description");
-    private final String TEST_TITLE = "Test SubTask";
+    private final Epic testEpic = new Epic("model.Epic Title", "model.Epic Description");
+    private final String TEST_TITLE = "Test model.SubTask";
     private final String TEST_DESCRIPTION = "Test Description";
 
     @Test

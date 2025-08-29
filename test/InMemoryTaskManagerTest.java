@@ -1,7 +1,13 @@
+import model.Epic;
+import model.SubTask;
+import model.Task;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import service.InMemoryTaskManager;
+import service.TaskManager;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -102,9 +108,9 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    public void askShouldRemainUnmodifiedAfterAddingToManager(){
+    public void askShouldRemainUnmodifiedAfterAddingToManager() {
         String title = "title";
-        String description  = "description";
+        String description = "description";
         Task newTask = new Task(title, description);
         int id = manager.addNewTask(newTask);
 
@@ -113,7 +119,7 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    public void shouldCleanAll(){
+    public void shouldCleanAll() {
         assertEquals(2, manager.getTasks().size());
         assertEquals(2, manager.getAllEpics().size());
         assertEquals(2, manager.getAllSubTask().size());
@@ -173,6 +179,54 @@ class InMemoryTaskManagerTest {
         );
     }
 
+    @Test
+    void testNoStaleSubTaskIdsInEpicAfterDeletion() {
+        assertEquals(List.of(subTask1, subTask2), manager.getEpicSubTasks(epic1Id));
+        manager.deleteTask(subTask1Id);
+        manager.deleteTask(subTask2Id);
 
+        assertFalse(epic1.getEpicSubTasks().stream() //Внутри эпиков не должно оставаться неактуальных id подзадач.
+                .anyMatch(subTask -> (subTask.getId() == subTask1Id) || (subTask.getId() == subTask2Id)));
+    }
+
+    @Test
+    void shouldBeEmptyHistoryAtTheBeginning() {
+        assertTrue(manager.getHistory().isEmpty(), "История должна быть пустой до просмотра задач");
+    }
+
+
+    @Test
+    void shouldRemoveTaskFromHistoryWhenTaskDeleted() {
+        assertTrue(manager.getHistory().isEmpty(), "История должна быть пустой до просмотра задач");
+
+        manager.getTaskById(task1Id); // просматриваем одну задачу
+        assertEquals(List.of(task1), manager.getHistory(), "В истории должна быть одна просмотренная задача");
+
+        manager.deleteTask(task1Id); // удаляем задачу
+        assertTrue(manager.getHistory().isEmpty(), "Задача должна удалиться и из истории при удалении задачи");
+    }
+
+    @Test
+    void shouldRemoveAllSubTasksFromHistoryWhenEpicDeleted() {
+        assertTrue(manager.getHistory().isEmpty(), "История должна быть пустой до просмотра задач");
+
+        manager.getEpicById(epic1Id); // просматриваем эпик
+        manager.getSubTaskById(subTask1Id); // просматриваем подзадачу эпика
+        manager.getSubTaskById(subTask2Id); // просматриваем вторую подзадачу эпика
+        manager.getTaskById(task1Id); // просматриваем просто задачу
+        assertEquals(
+                List.of(epic1, subTask1, subTask2, task1),
+                manager.getHistory(),
+                "В истории должны быть просмотренные задачи"
+        );
+
+        manager.deleteTask(epic1Id); // удаляем эпик
+
+        assertEquals(
+                List.of(task1),
+                manager.getHistory(),
+                "Подзадачи должны удалиться из истории при удалении Epic, другие задачи остаться"
+        );
+    }
 
 }

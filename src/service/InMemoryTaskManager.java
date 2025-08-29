@@ -1,3 +1,9 @@
+package service;
+
+import model.Epic;
+import model.SubTask;
+import model.Task;
+
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -44,11 +50,11 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Task getAnyTypeTaskById(int id) {
-        Optional<? extends Task>  requestedTaskOptional = Stream.of(tasks, subTasks, epics)
+        Optional<? extends Task> requestedTaskOptional = Stream.of(tasks, subTasks, epics)
                 .filter(hMap -> hMap.containsKey(id))
                 .map(hMap -> hMap.get(id))
                 .findFirst();
-        if(requestedTaskOptional.isPresent()){
+        if (requestedTaskOptional.isPresent()) {
             Task requestedTask = requestedTaskOptional.get();
             addTaskToHistory(requestedTask);
             return requestedTask;
@@ -60,7 +66,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Task getTaskById(int id) {
         Task requestedTask = tasks.get(id);
-        if(requestedTask!= null){
+        if (requestedTask != null) {
             addTaskToHistory(requestedTask);
             return requestedTask;
         } else {
@@ -71,7 +77,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Epic getEpicById(int id) {
         Epic requestedEpic = epics.get(id);
-        if(requestedEpic!= null){
+        if (requestedEpic != null) {
             addTaskToHistory(requestedEpic);
             return requestedEpic;
         } else {
@@ -82,7 +88,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public SubTask getSubTaskById(int id) {
         SubTask requestedSubTask = subTasks.get(id);
-        if(requestedSubTask!= null){
+        if (requestedSubTask != null) {
             addTaskToHistory(requestedSubTask);
             return requestedSubTask;
         } else {
@@ -136,16 +142,16 @@ public class InMemoryTaskManager implements TaskManager {
         return epics.get(id).getEpicSubTasks();
     }
 
-    private void addTaskToHistory(Task task){
+    private void addTaskToHistory(Task task) {
         historyManager.add(task);
     }
 
-    public List<Task> getHistory(){
+    public List<Task> getHistory() {
         return historyManager.getHistory();
     }
 
-    private void deleteFromHistory(Task task){
-        historyManager.delete(task);
+    private void deleteFromHistory(Task task) {
+        historyManager.remove(task.getId());
     }
 
 }

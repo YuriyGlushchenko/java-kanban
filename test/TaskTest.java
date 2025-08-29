@@ -1,10 +1,11 @@
-import org.junit.jupiter.api.BeforeEach;
+import model.Status;
+import model.Task;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class TaskTest {
-    private final String TEST_TITLE = "Test Task";
+    private final String TEST_TITLE = "Test model.Task";
     private final String TEST_DESCRIPTION = "Test Description";
 
     @Test

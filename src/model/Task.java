@@ -1,3 +1,5 @@
+package model;
+
 import java.util.Objects;
 
 public class Task {
@@ -64,7 +66,7 @@ public class Task {
 
     @Override
     public String toString() {
-        return this.getClass().getName() + "{" +
+        return this.getClass().getSimpleName() + "{" +
                 "id=" + id +
                 ", title='" + title + '\'' +
                 ", status=" + status +

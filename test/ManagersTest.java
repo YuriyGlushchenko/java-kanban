@@ -1,24 +1,27 @@
+import model.Task;
 import org.junit.jupiter.api.Test;
+import service.Managers;
+import service.TaskManager;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class ManagersTest {
 
     @Test
-    public void managersShouldReturnNonNullInstanceOfTaskManager(){
+    public void managersShouldReturnNonNullInstanceOfTaskManager() {
         assertNotNull(Managers.getDefault());
     }
 
     @Test
-    public void managersShouldReturnNonNullInstanceOfHistoryManager(){
+    public void managersShouldReturnNonNullInstanceOfHistoryManager() {
         assertNotNull(Managers.getDefaultHistory());
     }
 
     @Test
-    public void managersShouldReturnInitializedInstanceOfTaskManager(){
+    public void managersShouldReturnInitializedInstanceOfTaskManager() {
         TaskManager manager = Managers.getDefault();
         Task task1 = new Task("Простая задача1", "Описание простой задачи 1");
-        assertDoesNotThrow(()-> manager.addNewTask(task1));
+        assertDoesNotThrow(() -> manager.addNewTask(task1));
 
         Task task2 = new Task("Простая задача1", "Описание простой задачи 1");
         Object expectedTask2id = manager.addNewTask(task2);

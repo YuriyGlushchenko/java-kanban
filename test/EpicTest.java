@@ -1,5 +1,10 @@
+import model.Epic;
+import model.Status;
+import model.SubTask;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import service.InMemoryTaskManager;
+import service.TaskManager;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -87,8 +92,6 @@ class EpicTest {
         epic2.addSubTaskToEpic(subTask1);
         assertTrue(epic2.getEpicSubTasks().contains(subTask1));
     }
-
-
 
 
 }

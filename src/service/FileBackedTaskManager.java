@@ -1,6 +1,6 @@
 package service;
 
-import Exeptions.ManagerSaveException;
+import exeptions.ManagerSaveException;
 import model.*;
 import java.io.File;
 import java.io.IOException;

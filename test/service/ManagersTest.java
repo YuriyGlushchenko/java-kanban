@@ -1,7 +1,7 @@
+package service;
+
 import model.Task;
 import org.junit.jupiter.api.Test;
-import service.Managers;
-import service.TaskManager;
 
 import static org.junit.jupiter.api.Assertions.*;
 

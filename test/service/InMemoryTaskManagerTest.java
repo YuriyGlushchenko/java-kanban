@@ -1,10 +1,10 @@
+package service;
+
 import model.Epic;
 import model.SubTask;
 import model.Task;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import service.InMemoryTaskManager;
-import service.TaskManager;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -120,16 +120,16 @@ class InMemoryTaskManagerTest {
 
     @Test
     public void shouldCleanAll() {
-        assertEquals(2, manager.getTasks().size());
+        assertEquals(2, manager.getAllTasks().size());
         assertEquals(2, manager.getAllEpics().size());
-        assertEquals(2, manager.getAllSubTask().size());
+        assertEquals(2, manager.getAllSubTasks().size());
         assertEquals(6, manager.getAllTypesTask().size());
 
         manager.deleteAllTasks();
 
-        assertTrue(manager.getTasks().isEmpty());
+        assertTrue(manager.getAllTasks().isEmpty());
         assertTrue(manager.getAllEpics().isEmpty());
-        assertTrue(manager.getAllSubTask().isEmpty());
+        assertTrue(manager.getAllSubTasks().isEmpty());
         assertTrue(manager.getAllTypesTask().isEmpty());
     }
 

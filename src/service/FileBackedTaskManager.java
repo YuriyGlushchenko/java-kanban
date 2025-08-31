@@ -1,9 +1,7 @@
 package service;
 
-import model.Epic;
-import model.SubTask;
-import model.Task;
-import model.Type;
+import Exeptions.ManagerSaveException;
+import model.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,7 +9,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -19,22 +20,25 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     private final File autoSaveFile;
 
     public static void main(String[] args) {
-//        FileBackedTaskManager manager = new FileBackedTaskManager(new File("D:\\\\Java\\\\java-kanban\\\\src\\\\data.csv"));
-//        Task task1 = new Task("Простая задача1", "Описание простой задачи 1111");
-//        int task1Id = manager.addNewTask(task1);
-//        Task task2 = new Task("Простая задача2", "Описание простой задачи 2122");
-//        int task2Id = manager.addNewTask(task2);
-//        Epic epic1 = new Epic("Важный эпик1", "Описание эпика 1");
-//        Epic epic2 = new Epic("Важный эпик2", "Описание эпика 2");
-//        int epic1Id = manager.addNewTask(epic1);
-//        int epic2Id = manager.addNewTask(epic2);
-//
-//        SubTask subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1);
-//        int subTask1Id = manager.addNewTask(subTask1);
-//        SubTask subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1);
-//        int subTask2Id = manager.addNewTask(subTask2);
+        FileBackedTaskManager manager = new FileBackedTaskManager(new File("src/data.csv"));
+        Task task1 = new Task("Простая задача1", "Описание простой задачи 1111");
+        int task1Id = manager.addNewTask(task1);
+        Task task2 = new Task("Простая задача2", "Описание простой задачи 2122");
+        int task2Id = manager.addNewTask(task2);
+        Epic epic1 = new Epic("Важный эпик1", "Описание эпика 1");
+        Epic epic2 = new Epic("Важный эпик2", "Описание эпика 2");
+        int epic1Id = manager.addNewTask(epic1);
+        int epic2Id = manager.addNewTask(epic2);
 
-        loadFromFile(new File("D:\\\\Java\\\\java-kanban\\\\src\\\\data.csv"));
+        SubTask subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1);
+        int subTask1Id = manager.addNewTask(subTask1);
+        SubTask subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1);
+        int subTask2Id = manager.addNewTask(subTask2);
+        subTask1.setStatus(Status.DONE);
+        manager.updateTask(subTask1);
+
+        FileBackedTaskManager manager2 = loadFromFile(new File("src/data.csv"));
+        manager2.getAllTypesTask().forEach(System.out::println);
     }
 
 
@@ -42,14 +46,14 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         this.autoSaveFile = file;
     }
 
-    private void save() {
+    void save() {
         Stream<String> convertedTasksStream = Stream.of(tasks, subTasks, epics)
                 .flatMap(map -> map.values().stream())
                 .map(FileBackedTaskManager::convertToString);
         try {
             Files.write(autoSaveFile.toPath(), (Iterable<String>) convertedTasksStream::iterator);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new ManagerSaveException("Возникла ошибка сохранения в файл");
         }
 
     }
@@ -65,6 +69,10 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         int id = super.addNewTask(newTask);
         save();
         return id;
+    }
+
+    private void restoreTask(Task task) {
+        super.addNewTask(task);
     }
 
     @Override
@@ -99,53 +107,55 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     Task restoreFromString(String value) {
-        System.out.println(value);
-        String[] data = value.split(",");
+        String[] data = value.trim().split(",");
         int id = Integer.parseInt(data[0]);
         String title = data[2];
-        String description = data[3];
+        String description = data[4];
         Type type = Type.valueOf(data[1]);
+        Status status = Status.valueOf(data[3]);
 
 
         return switch (type) {
-            case TASK -> new Task(title, description, id);
+            case TASK -> {
+                Task restoredTask = new Task(title, description, id);
+                restoredTask.setStatus(status);
+                yield restoredTask;
+            }
             case EPIC -> new Epic(title, description, id);
-            case SUBTASK -> new SubTask(title, description, getEpicById(Integer.parseInt(data[5])), id);
+            case SUBTASK -> {
+                SubTask restoredSubTask = new SubTask(title, description, getEpicById(Integer.parseInt(data[5])), id);
+                restoredSubTask.setStatus(status);
+                yield restoredSubTask;
+            }
         };
     }
 
     static FileBackedTaskManager loadFromFile(File file) {
         Path path = file.toPath();
-        FileBackedTaskManager manager = new FileBackedTaskManager(file);
+        FileBackedTaskManager manager2 = new FileBackedTaskManager(file);
         try {
-            // Чтение всего содержимого файла в строку
-            String content = Files.readString(path);
-            System.out.println(content);
-
+            String content = Files.readString(path); // Чтение всего содержимого файла в одну строку
+            if (content.strip().isEmpty()) return manager2;
             String[] data = content.split("\n");
-            System.out.println(data.length);
-            Arrays.stream(data)
-                    .filter(str -> !str.split(",")[1].equals("SUBTASK"))
-                    .map(manager::restoreFromString)
-                    .forEach(manager::addNewTask);
 
-            System.out.println();
-            Arrays.stream(data).forEach(System.out::println);
-            System.out.println();
+            // сначал нужно восстановить все эпики и таски и только потом SubTask, т.к. они содержат ссылки на Epic.
+            Map<Boolean, List<String>> taskStrings = Arrays.stream(data)
+                    .collect(Collectors.partitioningBy(str -> !str.split(",")[1].equals("SUBTASK")));
 
-            Arrays.stream(data)
-                    .filter(str -> str.split(",")[1].equals("SUBTASK"))
-                    .map(manager::restoreFromString)
-                    .forEach(manager::addNewTask);
+            taskStrings.get(true) // сначал делаем все эпики и таски
+                    .stream()
+                    .map(manager2::restoreFromString)
+                    .forEach(manager2::restoreTask);
 
-            manager.getAllTypesTask().forEach(System.out::println);
-
-
+            taskStrings.get(false) // пото восстанавливаем SubTask
+                    .stream()
+                    .map(manager2::restoreFromString)
+                    .forEach(manager2::restoreTask);
 
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ManagerSaveException("Возникла ошибка чтения из файла");
         }
-        return manager;
+        return manager2;
     }
 
 

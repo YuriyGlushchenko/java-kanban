@@ -8,11 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public interface TaskManager {
-    ArrayList<Task> getTasks();
+    ArrayList<Task> getAllTasks();
 
     ArrayList<Epic> getAllEpics();
 
-    ArrayList<SubTask> getAllSubTask();
+    ArrayList<SubTask> getAllSubTasks();
 
     ArrayList<Task> getAllTypesTask();
 

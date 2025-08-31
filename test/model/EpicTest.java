@@ -1,6 +1,5 @@
-import model.Epic;
-import model.Status;
-import model.SubTask;
+package model;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import service.InMemoryTaskManager;

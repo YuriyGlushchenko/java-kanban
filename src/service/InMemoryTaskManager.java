@@ -8,10 +8,10 @@ import java.util.*;
 import java.util.stream.Stream;
 
 public class InMemoryTaskManager implements TaskManager {
-    private final HashMap<Integer, Task> tasks = new HashMap<>();
-    private final HashMap<Integer, SubTask> subTasks = new HashMap<>();
-    private final HashMap<Integer, Epic> epics = new HashMap<>();
-    private static int counter = 0;
+    final HashMap<Integer, Task> tasks = new HashMap<>();
+    final HashMap<Integer, SubTask> subTasks = new HashMap<>();
+    final HashMap<Integer, Epic> epics = new HashMap<>();
+    private static int idCounter = 0;
 
     private final HistoryManager historyManager = Managers.getDefaultHistory();
 
@@ -98,18 +98,20 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public int addNewTask(Task newTask) {
-        int newItemId = ++counter;
-        newTask.setId(newItemId);
+        if (newTask.getId() == -1) {
+            int newItemId = ++idCounter;
+            newTask.setId(newItemId);
+        }
         if (newTask instanceof SubTask newSubTask) {
-            subTasks.put(newItemId, newSubTask);
+            subTasks.put(newSubTask.getId(), newSubTask);
             newSubTask.getParentEpic().addSubTaskToEpic(newSubTask);
             newSubTask.getParentEpic().checkEpicStatus();
         } else if (newTask instanceof Epic newEpic) {
-            epics.put(newItemId, newEpic);
+            epics.put(newEpic.getId(), newEpic);
         } else {
-            tasks.put(newItemId, newTask);
+            tasks.put(newTask.getId(), newTask);
         }
-        return newItemId;
+        return newTask.getId();
     }
 
     @Override

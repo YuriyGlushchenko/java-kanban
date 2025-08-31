@@ -2,17 +2,13 @@ package service;
 
 import Exeptions.ManagerSaveException;
 import model.*;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -135,7 +131,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         FileBackedTaskManager manager2 = new FileBackedTaskManager(file);
         try {
             String content = Files.readString(path); // Чтение всего содержимого файла в одну строку
-            if (content.strip().isEmpty()) return manager2;
+            if (content.strip().isBlank()) return manager2;
             String[] data = content.split("\n");
 
             // сначал нужно восстановить все эпики и таски и только потом SubTask, т.к. они содержат ссылки на Epic.

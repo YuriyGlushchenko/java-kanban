@@ -2,6 +2,7 @@ package service;
 
 import exeptions.ManagerSaveException;
 import model.*;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,9 +44,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     void save() {
-        Stream<String> convertedTasksStream = Stream.of(tasks, subTasks, epics)
-                .flatMap(map -> map.values().stream())
-                .map(FileBackedTaskManager::convertToString);
+        Stream<String> convertedTasksStream = Stream.of(tasks, subTasks, epics).flatMap(map -> map.values().stream()).map(FileBackedTaskManager::convertToString);
         try {
             Files.write(autoSaveFile.toPath(), (Iterable<String>) convertedTasksStream::iterator);
         } catch (IOException e) {
@@ -92,14 +91,13 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         } else if (task instanceof Epic) {
             type = Type.EPIC;
         }
-        return String.format("%d,%s,%s,%s,%s,%s"
-                , task.getId()
-                , type
-                , task.getTitle()
-                , task.getStatus()
-                , task.getDescription()
-                , type == Type.SUBTASK ? epicId : ""
-        );
+        return String.format("%d,%s,%s,%s,%s,%s",
+                task.getId(),
+                type,
+                task.getTitle(),
+                task.getStatus(),
+                task.getDescription(),
+                type == Type.SUBTASK ? epicId : "");
     }
 
     Task restoreFromString(String value) {
@@ -135,18 +133,13 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             String[] data = content.split("\n");
 
             // сначал нужно восстановить все эпики и таски и только потом SubTask, т.к. они содержат ссылки на Epic.
-            Map<Boolean, List<String>> taskStrings = Arrays.stream(data)
-                    .collect(Collectors.partitioningBy(str -> !str.split(",")[1].equals("SUBTASK")));
+            Map<Boolean, List<String>> taskStrings = Arrays.stream(data).collect(Collectors.partitioningBy(str -> !str.split(",")[1].equals("SUBTASK")));
 
             taskStrings.get(true) // сначал делаем все эпики и таски
-                    .stream()
-                    .map(manager2::restoreFromString)
-                    .forEach(manager2::restoreTask);
+                    .stream().map(manager2::restoreFromString).forEach(manager2::restoreTask);
 
             taskStrings.get(false) // пото восстанавливаем SubTask
-                    .stream()
-                    .map(manager2::restoreFromString)
-                    .forEach(manager2::restoreTask);
+                    .stream().map(manager2::restoreFromString).forEach(manager2::restoreTask);
 
         } catch (IOException e) {
             throw new ManagerSaveException("Возникла ошибка чтения из файла");

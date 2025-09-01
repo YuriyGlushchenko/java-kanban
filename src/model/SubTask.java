@@ -6,15 +6,18 @@ public class SubTask extends Task {
     public SubTask(String title, String description, int parentEpicId) {
         super(title, description);
         this.parentEpicId = parentEpicId;
+        this.type = Type.SUBTASK;
     }
 
     public SubTask(String title, String description, int parentEpicId, int id) {
         super(title, description, id);
         this.parentEpicId = parentEpicId;
+        this.type = Type.SUBTASK;
     }
 
     public SubTask(int parentEpicId) {
         this.parentEpicId = parentEpicId;
+        this.type = Type.SUBTASK;
     }
 
     public int getParentEpicId() {

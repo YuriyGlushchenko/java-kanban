@@ -1,6 +1,7 @@
 package service;
 
 import model.Epic;
+import model.Status;
 import model.SubTask;
 import model.Task;
 
@@ -8,13 +9,11 @@ import java.util.*;
 import java.util.stream.Stream;
 
 public class InMemoryTaskManager implements TaskManager {
-    final HashMap<Integer, Task> tasks = new HashMap<>();
-    final HashMap<Integer, SubTask> subTasks = new HashMap<>();
-    final HashMap<Integer, Epic> epics = new HashMap<>();
-    private static int idCounter = 0;
-
+    protected final HashMap<Integer, Task> tasks = new HashMap<>();
+    protected final HashMap<Integer, SubTask> subTasks = new HashMap<>();
+    protected final HashMap<Integer, Epic> epics = new HashMap<>();
     private final HistoryManager historyManager = Managers.getDefaultHistory();
-
+    private int idCounter = 0;
 
     @Override
     public ArrayList<Task> getAllTasks() {
@@ -102,12 +101,11 @@ public class InMemoryTaskManager implements TaskManager {
             int newItemId = ++idCounter;
             newTask.setId(newItemId);
         }
+
         if (newTask instanceof SubTask newSubTask) {
             subTasks.put(newSubTask.getId(), newSubTask);
-//            newSubTask.getParentEpicId().addSubTaskToEpic(newSubTask);
             epics.get(newSubTask.getParentEpicId()).addSubTaskToEpic(newSubTask);
-//            newSubTask.getParentEpicId().checkEpicStatus();
-
+            checkEpicStatusIsChanged(newSubTask.getParentEpicId());
 
         } else if (newTask instanceof Epic newEpic) {
             epics.put(newEpic.getId(), newEpic);
@@ -121,7 +119,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void updateTask(Task task) {
         if (task instanceof SubTask subTask) {
             subTasks.put(subTask.getId(), subTask);
-//            subTask.getParentEpicId().checkEpicStatus();
+            checkEpicStatusIsChanged(subTask.getParentEpicId());
         } else if (task instanceof Epic epic) {
             epics.put(epic.getId(), epic);
         } else {
@@ -138,9 +136,10 @@ public class InMemoryTaskManager implements TaskManager {
             }
             epics.remove(id);
         } else if (taskToDelete instanceof SubTask subTask) {
-//            subTask.getParentEpicId().removeFromEpicSubTasks(taskToDelete.getId());
-            epics.get(subTask.getParentEpicId()).removeFromEpicSubTasks(taskToDelete.getId());
+            Epic parentEpic = epics.get(subTask.getParentEpicId());
+            parentEpic.removeFromEpicSubTasks(taskToDelete.getId());
             subTasks.remove(id);
+            checkEpicStatusIsChanged(parentEpic.getId());
         } else {
             tasks.remove(id);
         }
@@ -162,6 +161,11 @@ public class InMemoryTaskManager implements TaskManager {
 
     private void deleteFromHistory(Task task) {
         historyManager.remove(task.getId());
+    }
+
+    private void checkEpicStatusIsChanged(int epicId) {
+        Epic epic = epics.get(epicId);
+        epic.setStatus(Status.NEW);  // Можно указать любой статус, он просто запустит проверку статуса Эпика
     }
 
 }

@@ -54,6 +54,7 @@ class EpicTest {
     @Test
     public void shouldBeEpicStatusIN_PROGRESSWhenSubTaskIsIN_PROGRESS() {
         subTask1.setStatus(Status.IN_PROGRESS);
+        manager.updateTask(subTask1);
         assertEquals(Status.IN_PROGRESS, epic1.getStatus());
     }
 
@@ -61,6 +62,8 @@ class EpicTest {
     public void shouldBeEpicStatusDONEWhenAllSubTaskIsDONE() {
         subTask1.setStatus(Status.DONE);
         subTask2.setStatus(Status.DONE);
+        manager.updateTask(subTask1);
+        manager.updateTask(subTask2);
         assertEquals(Status.DONE, epic1.getStatus());
     }
 

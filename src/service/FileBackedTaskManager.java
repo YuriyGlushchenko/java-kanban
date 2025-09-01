@@ -1,7 +1,10 @@
 package service;
 
 import exeptions.ManagerSaveException;
-import model.*;
+import model.Epic;
+import model.Status;
+import model.SubTask;
+import model.Task;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,6 +18,10 @@ import java.util.stream.Stream;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final File autoSaveFile;
+
+    public FileBackedTaskManager(File file) {
+        this.autoSaveFile = file;
+    }
 
     public static void main(String[] args) {
         FileBackedTaskManager manager = new FileBackedTaskManager(new File("src/data.csv"));
@@ -38,21 +45,27 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         manager2.getAllTypesTask().forEach(System.out::println);
     }
 
-
-    public FileBackedTaskManager(File file) {
-        this.autoSaveFile = file;
-    }
-
-    void save() {
-        Stream<String> convertedTasksStream = Stream.of(tasks, subTasks, epics)
-                .flatMap(map -> map.values().stream())
-                .map(FileBackedTaskManager::convertToString);
+    public static FileBackedTaskManager loadFromFile(File file) {
+        Path path = file.toPath();
+        FileBackedTaskManager loadedManager = new FileBackedTaskManager(file);
         try {
-            Files.write(autoSaveFile.toPath(), (Iterable<String>) convertedTasksStream::iterator);
-        } catch (IOException e) {
-            throw new ManagerSaveException("Возникла ошибка сохранения в файл");
-        }
+            String content = Files.readString(path); // Чтение всего содержимого файла в одну строку
+            if (content.strip().isBlank()) return loadedManager;
+            String[] data = content.split("\n");
 
+            // сначал нужно восстановить все эпики и таски и только потом SubTask, т.к. они содержат ссылки на Epic.
+            Map<Boolean, List<String>> taskStrings = Arrays.stream(data).collect(Collectors.partitioningBy(str -> !str.split(",")[1].equals("SUBTASK")));
+
+            taskStrings.get(true) // сначал делаем все эпики и таски
+                    .stream().map(TaskManagerUtils::restoreFromString).forEach(loadedManager::restoreTask);
+
+            taskStrings.get(false) // пото восстанавливаем SubTask
+                    .stream().map(TaskManagerUtils::restoreFromString).forEach(loadedManager::restoreTask);
+
+        } catch (IOException e) {
+            throw new ManagerSaveException("Возникла ошибка чтения из файла");
+        }
+        return loadedManager;
     }
 
     @Override
@@ -68,10 +81,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         return id;
     }
 
-    private void restoreTask(Task task) {
-        super.addNewTask(task);
-    }
-
     @Override
     public void updateTask(Task task) {
         super.updateTask(task);
@@ -84,69 +93,20 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         save();
     }
 
-    static String convertToString(Task task) {
-        int epicId = -1;
-        Type type = Type.TASK;
-        if (task instanceof SubTask subTask) {
-            type = Type.SUBTASK;
-            epicId = subTask.getParentEpicId();
-        } else if (task instanceof Epic) {
-            type = Type.EPIC;
-        }
-        return String.format("%d,%s,%s,%s,%s,%s",
-                task.getId(),
-                type,
-                task.getTitle(),
-                task.getStatus(),
-                task.getDescription(),
-                type == Type.SUBTASK ? epicId : "");
-    }
-
-    Task restoreFromString(String value) {
-        String[] data = value.trim().split(",");
-        int id = Integer.parseInt(data[0]);
-        String title = data[2];
-        String description = data[4];
-        Type type = Type.valueOf(data[1]);
-        Status status = Status.valueOf(data[3]);
-
-
-        return switch (type) {
-            case TASK -> {
-                Task restoredTask = new Task(title, description, id);
-                restoredTask.setStatus(status);
-                yield restoredTask;
-            }
-            case EPIC -> new Epic(title, description, id);
-            case SUBTASK -> {
-                SubTask restoredSubTask = new SubTask(title, description, Integer.parseInt(data[5]), id);
-                restoredSubTask.setStatus(status);
-                yield restoredSubTask;
-            }
-        };
-    }
-
-    static FileBackedTaskManager loadFromFile(File file) {
-        Path path = file.toPath();
-        FileBackedTaskManager manager2 = new FileBackedTaskManager(file);
+    private void save() {
+        Stream<String> convertedTasksStream = Stream.of(tasks, subTasks, epics)
+                .flatMap(map -> map.values().stream())
+                .map(TaskManagerUtils::convertToString);
         try {
-            String content = Files.readString(path); // Чтение всего содержимого файла в одну строку
-            if (content.strip().isBlank()) return manager2;
-            String[] data = content.split("\n");
-
-            // сначал нужно восстановить все эпики и таски и только потом SubTask, т.к. они содержат ссылки на Epic.
-            Map<Boolean, List<String>> taskStrings = Arrays.stream(data).collect(Collectors.partitioningBy(str -> !str.split(",")[1].equals("SUBTASK")));
-
-            taskStrings.get(true) // сначал делаем все эпики и таски
-                    .stream().map(manager2::restoreFromString).forEach(manager2::restoreTask);
-
-            taskStrings.get(false) // пото восстанавливаем SubTask
-                    .stream().map(manager2::restoreFromString).forEach(manager2::restoreTask);
-
+            Files.write(autoSaveFile.toPath(), (Iterable<String>) convertedTasksStream::iterator);
         } catch (IOException e) {
-            throw new ManagerSaveException("Возникла ошибка чтения из файла");
+            throw new ManagerSaveException("Возникла ошибка сохранения в файл");
         }
-        return manager2;
+
+    }
+
+    private void restoreTask(Task task) {
+        super.addNewTask(task);
     }
 
 

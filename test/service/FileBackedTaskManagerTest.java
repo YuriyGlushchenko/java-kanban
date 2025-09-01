@@ -19,25 +19,21 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class FileBackedTaskManagerTest {
     private static FileBackedTaskManager manager;
-    private File testFile;
-
     private static Task task1;
     private static int task1Id;
     private static Task task2;
     private static int task2Id;
-
     private static Epic epic1;
     private static Epic epic2;
     private static int epic1Id;
     private static int epic2Id;
-
     private static SubTask subTask1;
     private static SubTask subTask2;
     private static int subTask1Id;
     private static int subTask2Id;
-
     @TempDir
     Path tempDir;
+    private File testFile;
 
     @BeforeEach
     public void beforeEach() throws IOException {
@@ -61,14 +57,14 @@ class FileBackedTaskManagerTest {
 
     @Test
     public void ShouldCorrectlyConverTaskToString() {
-        String convertedTask = FileBackedTaskManager.convertToString(task1);
+        String convertedTask = TaskManagerUtils.convertToString(task1);
         String expected = String.format("%d,TASK,Простая задача1,NEW,Описание простой задачи 1,", task1Id);
         assertEquals(expected, convertedTask, "Конвертация проходит неправильно");
     }
 
     @Test
     public void ShouldCorrectlyConverSubTaskToString() {
-        String convertedTask = FileBackedTaskManager.convertToString(subTask1);
+        String convertedTask = TaskManagerUtils.convertToString(subTask1);
         String expected = String.format("%d,SUBTASK,Подзадача 1,NEW,описание подзадачи1,%d", subTask1Id, epic1Id);
         assertEquals(expected, convertedTask, "Конвертация проходит неправильно");
     }
@@ -77,7 +73,7 @@ class FileBackedTaskManagerTest {
     void testSaveAndLoadEmptyFile() throws IOException {
         testFile = Files.createTempFile(tempDir, "test11", ".csv").toFile();
         manager = new FileBackedTaskManager(testFile);
-        manager.save();
+        manager.deleteAllTasks();
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(testFile);
 

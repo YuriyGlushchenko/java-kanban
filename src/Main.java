@@ -17,11 +17,11 @@ public class Main {
 
         Epic epic1 = new Epic("Важный эпик1", "описние эпика 1");
         manager.addNewTask(epic1);
-        SubTask subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1);
+        SubTask subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1.getId());
         manager.addNewTask(subTask1);
-        SubTask subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1);
+        SubTask subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1.getId());
         manager.addNewTask(subTask2);
-        SubTask subTask3 = new SubTask("Подзадача 3", "описание подзадачи3", epic1);
+        SubTask subTask3 = new SubTask("Подзадача 3", "описание подзадачи3", epic1.getId());
         manager.addNewTask(subTask3);
 
         Epic epic2 = new Epic("Важный эпик2", "описние эпика 2");

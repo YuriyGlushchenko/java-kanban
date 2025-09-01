@@ -104,8 +104,11 @@ public class InMemoryTaskManager implements TaskManager {
         }
         if (newTask instanceof SubTask newSubTask) {
             subTasks.put(newSubTask.getId(), newSubTask);
-            newSubTask.getParentEpic().addSubTaskToEpic(newSubTask);
-            newSubTask.getParentEpic().checkEpicStatus();
+//            newSubTask.getParentEpicId().addSubTaskToEpic(newSubTask);
+            epics.get(newSubTask.getParentEpicId()).addSubTaskToEpic(newSubTask);
+//            newSubTask.getParentEpicId().checkEpicStatus();
+
+
         } else if (newTask instanceof Epic newEpic) {
             epics.put(newEpic.getId(), newEpic);
         } else {
@@ -118,7 +121,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void updateTask(Task task) {
         if (task instanceof SubTask subTask) {
             subTasks.put(subTask.getId(), subTask);
-            subTask.getParentEpic().checkEpicStatus();
+//            subTask.getParentEpicId().checkEpicStatus();
         } else if (task instanceof Epic epic) {
             epics.put(epic.getId(), epic);
         } else {
@@ -135,7 +138,8 @@ public class InMemoryTaskManager implements TaskManager {
             }
             epics.remove(id);
         } else if (taskToDelete instanceof SubTask subTask) {
-            subTask.getParentEpic().removeFromEpicSubTasks(taskToDelete.getId());
+//            subTask.getParentEpicId().removeFromEpicSubTasks(taskToDelete.getId());
+            epics.get(subTask.getParentEpicId()).removeFromEpicSubTasks(taskToDelete.getId());
             subTasks.remove(id);
         } else {
             tasks.remove(id);

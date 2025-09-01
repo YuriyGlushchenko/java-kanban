@@ -1,29 +1,29 @@
 package model;
 
 public class SubTask extends Task {
-    private final Epic parentEpic;
+    private final int parentEpicId;
 
-    public SubTask(String title, String description, Epic parentEpic) {
+    public SubTask(String title, String description, int parentEpicId) {
         super(title, description);
-        this.parentEpic = parentEpic;
+        this.parentEpicId = parentEpicId;
     }
 
-    public SubTask(String title, String description, Epic parentEpic, int id) {
+    public SubTask(String title, String description, int parentEpicId, int id) {
         super(title, description, id);
-        this.parentEpic = parentEpic;
+        this.parentEpicId = parentEpicId;
     }
 
-    public SubTask(Epic parentEpic) {
-        this.parentEpic = parentEpic;
+    public SubTask(int parentEpicId) {
+        this.parentEpicId = parentEpicId;
     }
 
-    public Epic getParentEpic() {
-        return parentEpic;
+    public int getParentEpicId() {
+        return parentEpicId;
     }
 
     @Override
     public void setStatus(Status status) {
         super.setStatus(status);
-        parentEpic.checkEpicStatus();
+//        parentEpicId.checkEpicStatus();
     }
 }

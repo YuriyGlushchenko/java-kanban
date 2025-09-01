@@ -11,12 +11,12 @@ class SubTaskTest {
 
     @Test
     void constructorShouldSetTitleAndDescription() {
-        SubTask subTask = new SubTask(TEST_TITLE, TEST_DESCRIPTION, testEpic);
+        SubTask subTask = new SubTask(TEST_TITLE, TEST_DESCRIPTION, testEpic.getId());
 
         assertAll(
                 () -> assertEquals(TEST_TITLE, subTask.getTitle()),
                 () -> assertEquals(TEST_DESCRIPTION, subTask.getDescription()),
-                () -> assertEquals(testEpic, subTask.getParentEpic()),
+                () -> assertEquals(testEpic.getId(), subTask.getParentEpicId()),
                 () -> assertEquals(Status.NEW, subTask.getStatus())
         );
     }

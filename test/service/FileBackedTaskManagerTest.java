@@ -53,9 +53,9 @@ class FileBackedTaskManagerTest {
         epic1Id = manager.addNewTask(epic1);
         epic2Id = manager.addNewTask(epic2);
 
-        subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1);
+        subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1Id);
         subTask1Id = manager.addNewTask(subTask1);
-        subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1);
+        subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1Id);
         subTask2Id = manager.addNewTask(subTask2);
     }
 
@@ -110,8 +110,8 @@ class FileBackedTaskManagerTest {
         assertEquals("Подзадача 2", loadedSubTasks.get(1).getTitle());
 
         // Проверяем связь подзадач с эпиками
-        assertEquals(epic1Id, loadedSubTasks.get(0).getParentEpic().getId());
-        assertEquals(epic1Id, loadedSubTasks.get(1).getParentEpic().getId());
+        assertEquals(epic1Id, loadedSubTasks.get(0).getParentEpicId());
+        assertEquals(epic1Id, loadedSubTasks.get(1).getParentEpicId());
     }
 
     @Test

@@ -27,9 +27,9 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         int epic1Id = manager.addNewTask(epic1);
         int epic2Id = manager.addNewTask(epic2);
 
-        SubTask subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1);
+        SubTask subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1Id);
         int subTask1Id = manager.addNewTask(subTask1);
-        SubTask subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1);
+        SubTask subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1Id);
         int subTask2Id = manager.addNewTask(subTask2);
         subTask1.setStatus(Status.DONE);
         manager.updateTask(subTask1);
@@ -44,7 +44,9 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     void save() {
-        Stream<String> convertedTasksStream = Stream.of(tasks, subTasks, epics).flatMap(map -> map.values().stream()).map(FileBackedTaskManager::convertToString);
+        Stream<String> convertedTasksStream = Stream.of(tasks, subTasks, epics)
+                .flatMap(map -> map.values().stream())
+                .map(FileBackedTaskManager::convertToString);
         try {
             Files.write(autoSaveFile.toPath(), (Iterable<String>) convertedTasksStream::iterator);
         } catch (IOException e) {
@@ -87,7 +89,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         Type type = Type.TASK;
         if (task instanceof SubTask subTask) {
             type = Type.SUBTASK;
-            epicId = subTask.getParentEpic().getId();
+            epicId = subTask.getParentEpicId();
         } else if (task instanceof Epic) {
             type = Type.EPIC;
         }
@@ -117,7 +119,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             }
             case EPIC -> new Epic(title, description, id);
             case SUBTASK -> {
-                SubTask restoredSubTask = new SubTask(title, description, getEpicById(Integer.parseInt(data[5])), id);
+                SubTask restoredSubTask = new SubTask(title, description, Integer.parseInt(data[5]), id);
                 restoredSubTask.setStatus(status);
                 yield restoredSubTask;
             }

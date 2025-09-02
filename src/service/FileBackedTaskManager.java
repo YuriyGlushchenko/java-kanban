@@ -26,18 +26,18 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     public static void main(String[] args) {
         FileBackedTaskManager manager = new FileBackedTaskManager(new File("src/data.csv"));
         Task task1 = new Task("Простая задача1", "Описание простой задачи 1111");
-        int task1Id = manager.addNewTask(task1);
+        int task1Id = manager.addAnyTypeTask(task1);
         Task task2 = new Task("Простая задача2", "Описание простой задачи 2122");
-        int task2Id = manager.addNewTask(task2);
+        int task2Id = manager.addAnyTypeTask(task2);
         Epic epic1 = new Epic("Важный эпик1", "Описание эпика 1");
         Epic epic2 = new Epic("Важный эпик2", "Описание эпика 2");
-        int epic1Id = manager.addNewTask(epic1);
-        int epic2Id = manager.addNewTask(epic2);
+        int epic1Id = manager.addAnyTypeTask(epic1);
+        int epic2Id = manager.addAnyTypeTask(epic2);
 
         SubTask subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1Id);
-        int subTask1Id = manager.addNewTask(subTask1);
+        int subTask1Id = manager.addAnyTypeTask(subTask1);
         SubTask subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1Id);
-        int subTask2Id = manager.addNewTask(subTask2);
+        int subTask2Id = manager.addAnyTypeTask(subTask2);
         subTask1.setStatus(Status.DONE);
         manager.updateTask(subTask1);
 
@@ -50,17 +50,24 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         FileBackedTaskManager loadedManager = new FileBackedTaskManager(file);
         try {
             String content = Files.readString(path); // Чтение всего содержимого файла в одну строку
-            if (content.strip().isBlank()) return loadedManager;
-            String[] data = content.split("\n");
+            String[] data = content.strip().split("\n");
+            if (data.length == 1) return loadedManager;
+            String[] dataWithoutHeader = Arrays.copyOfRange(data, 1, data.length);
 
             // сначал нужно восстановить все эпики и таски и только потом SubTask, т.к. они содержат ссылки на Epic.
-            Map<Boolean, List<String>> taskStrings = Arrays.stream(data).collect(Collectors.partitioningBy(str -> !str.split(",")[1].equals("SUBTASK")));
+            Map<Boolean, List<String>> taskStrings = Arrays
+                    .stream(dataWithoutHeader)
+                    .collect(Collectors.partitioningBy(str -> !str.split(",")[1].equals("SUBTASK")));
 
             taskStrings.get(true) // сначал делаем все эпики и таски
-                    .stream().map(TaskManagerUtils::restoreFromString).forEach(loadedManager::restoreTask);
+                    .stream()
+                    .map(TaskManagerUtils::restoreFromString)
+                    .forEach(loadedManager::restoreTask);
 
             taskStrings.get(false) // пото восстанавливаем SubTask
-                    .stream().map(TaskManagerUtils::restoreFromString).forEach(loadedManager::restoreTask);
+                    .stream()
+                    .map(TaskManagerUtils::restoreFromString)
+                    .forEach(loadedManager::restoreTask);
 
         } catch (IOException e) {
             throw new ManagerSaveException("Возникла ошибка чтения из файла");
@@ -69,14 +76,14 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     @Override
-    public void deleteAllTasks() {
-        super.deleteAllTasks();
+    public void clearManager() {
+        super.clearManager();
         save();
     }
 
     @Override
-    public int addNewTask(Task newTask) {
-        int id = super.addNewTask(newTask);
+    public int addAnyTypeTask(Task newTask) {
+        int id = super.addAnyTypeTask(newTask);
         save();
         return id;
     }
@@ -88,17 +95,39 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     @Override
-    public void deleteTask(int id) {
-        super.deleteTask(id);
+    public void deleteAnyTypeTask(int id) {
+        super.deleteAnyTypeTask(id);
+        save();
+    }
+
+    @Override
+    public void deleteAllSubTasks() {
+        super.deleteAllSubTasks();
+        save();
+    }
+
+    @Override
+    public void deleteAllEpics() {
+        super.deleteAllEpics();
+        save();
+    }
+
+    @Override
+    public void deleteAllTasks() {
+        super.deleteAllTasks();
         save();
     }
 
     private void save() {
+        String header = "id,type,name,status,description,epic";
+
         Stream<String> convertedTasksStream = Stream.of(tasks, subTasks, epics)
                 .flatMap(map -> map.values().stream())
                 .map(TaskManagerUtils::convertToString);
+        Stream<String> fullContent = Stream.concat(Stream.of(header), convertedTasksStream);
+
         try {
-            Files.write(autoSaveFile.toPath(), (Iterable<String>) convertedTasksStream::iterator);
+            Files.write(autoSaveFile.toPath(), (Iterable<String>) fullContent::iterator);
         } catch (IOException e) {
             throw new ManagerSaveException("Возникла ошибка сохранения в файл");
         }
@@ -106,7 +135,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     private void restoreTask(Task task) {
-        super.addNewTask(task);
+        super.addAnyTypeTask(task);
     }
 
 

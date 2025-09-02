@@ -20,11 +20,11 @@ public interface TaskManager {
 
     Task getAnyTypeTaskById(int id);
 
-    int addNewTask(Task newTask);
+    int addAnyTypeTask(Task newTask);
 
     void updateTask(Task task);
 
-    void deleteTask(int id);
+    void deleteAnyTypeTask(int id);
 
     ArrayList<SubTask> getEpicSubTasks(int id);
 

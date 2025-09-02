@@ -1,6 +1,7 @@
 package service;
 
 import model.Epic;
+import model.Status;
 import model.SubTask;
 import model.Task;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +14,7 @@ import java.util.NoSuchElementException;
 import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryTaskManagerTest {
-    private static TaskManager manager;
+    private static InMemoryTaskManager manager;
     private static Task task1;
     private static int task1Id;
     private static Task task2;
@@ -34,19 +35,19 @@ class InMemoryTaskManagerTest {
     public void beforeEach() {
         manager = new InMemoryTaskManager();
         task1 = new Task("Простая задача1", "Описание простой задачи 1");
-        task1Id = manager.addNewTask(task1);
+        task1Id = manager.addAnyTypeTask(task1);
         task2 = new Task("Простая задача2", "Описание простой задачи 2");
-        task2Id = manager.addNewTask(task2);
+        task2Id = manager.addAnyTypeTask(task2);
 
         epic1 = new Epic("Важный эпик1", "Описание эпика 1");
         epic2 = new Epic("Важный эпик2", "Описание эпика 2");
-        epic1Id = manager.addNewTask(epic1);
-        epic2Id = manager.addNewTask(epic2);
+        epic1Id = manager.addAnyTypeTask(epic1);
+        epic2Id = manager.addAnyTypeTask(epic2);
 
         subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1Id);
-        subTask1Id = manager.addNewTask(subTask1);
+        subTask1Id = manager.addAnyTypeTask(subTask1);
         subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1Id);
-        subTask2Id = manager.addNewTask(subTask2);
+        subTask2Id = manager.addAnyTypeTask(subTask2);
     }
 
     @Test
@@ -112,7 +113,7 @@ class InMemoryTaskManagerTest {
         String title = "title";
         String description = "description";
         Task newTask = new Task(title, description);
-        int id = manager.addNewTask(newTask);
+        int id = manager.addAnyTypeTask(newTask);
 
         assertEquals(title, manager.getAnyTypeTaskById(id).getTitle());
         assertEquals(description, manager.getAnyTypeTaskById(id).getDescription());
@@ -125,7 +126,7 @@ class InMemoryTaskManagerTest {
         assertEquals(2, manager.getAllSubTasks().size());
         assertEquals(6, manager.getAllTypesTask().size());
 
-        manager.deleteAllTasks();
+        manager.clearManager();
 
         assertTrue(manager.getAllTasks().isEmpty());
         assertTrue(manager.getAllEpics().isEmpty());
@@ -182,8 +183,8 @@ class InMemoryTaskManagerTest {
     @Test
     void testNoStaleSubTaskIdsInEpicAfterDeletion() {
         assertEquals(List.of(subTask1, subTask2), manager.getEpicSubTasks(epic1Id));
-        manager.deleteTask(subTask1Id);
-        manager.deleteTask(subTask2Id);
+        manager.deleteAnyTypeTask(subTask1Id);
+        manager.deleteAnyTypeTask(subTask2Id);
 
         assertFalse(epic1.getEpicSubTasks().stream() //Внутри эпиков не должно оставаться неактуальных id подзадач.
                 .anyMatch(subTask -> (subTask.getId() == subTask1Id) || (subTask.getId() == subTask2Id)));
@@ -202,7 +203,7 @@ class InMemoryTaskManagerTest {
         manager.getTaskById(task1Id); // просматриваем одну задачу
         assertEquals(List.of(task1), manager.getHistory(), "В истории должна быть одна просмотренная задача");
 
-        manager.deleteTask(task1Id); // удаляем задачу
+        manager.deleteAnyTypeTask(task1Id); // удаляем задачу
         assertTrue(manager.getHistory().isEmpty(), "Задача должна удалиться и из истории при удалении задачи");
     }
 
@@ -220,13 +221,56 @@ class InMemoryTaskManagerTest {
                 "В истории должны быть просмотренные задачи"
         );
 
-        manager.deleteTask(epic1Id); // удаляем эпик
+        manager.deleteAnyTypeTask(epic1Id); // удаляем эпик
 
         assertEquals(
                 List.of(task1),
                 manager.getHistory(),
                 "Подзадачи должны удалиться из истории при удалении Epic, другие задачи остаться"
         );
+    }
+
+    @Test
+    void deleteAllSubTasks_shouldRemoveAllSubTasksAndUpdateEpics() {
+        SubTask subTask3 = new SubTask("SubTask 3", "Description", epic2Id);
+        manager.addAnyTypeTask(subTask3);
+
+        manager.deleteAllSubTasks();
+
+        assertTrue(manager.getAllSubTasks().isEmpty());
+        assertTrue(manager.getEpicSubTasks(epic1Id).isEmpty());
+        assertTrue(manager.getEpicSubTasks(epic2Id).isEmpty());
+    }
+
+    @Test
+    void deleteAllEpics_shouldRemoveAllEpicsAndTheirSubTasks() {
+        manager.deleteAllEpics();
+
+        assertTrue(manager.getAllEpics().isEmpty());
+        assertTrue(manager.getAllSubTasks().isEmpty());
+    }
+
+    @Test
+    void deleteAllTasks_shouldRemoveAllTasks() {
+        assertEquals(2, manager.getAllTasks().size());
+        manager.deleteAllTasks();
+
+        assertTrue(manager.getAllTasks().isEmpty());
+    }
+
+    @Test
+    void deleteAllTasks_shouldNotAffectEpicsAndSubTasks() {
+         manager.deleteAllTasks();
+
+        assertTrue(manager.getAllTasks().isEmpty());
+        assertEquals(2, manager.getAllEpics().size());
+        assertEquals(2, manager.getAllSubTasks().size());
+    }
+
+    @Test
+    void deleteNonExistentTask_shouldThrowException() {
+        // Act & Assert
+        assertThrows(NoSuchElementException.class, () -> manager.deleteAnyTypeTask(999));
     }
 
 }

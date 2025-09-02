@@ -21,10 +21,10 @@ class ManagersTest {
     public void managersShouldReturnInitializedInstanceOfTaskManager() {
         TaskManager manager = Managers.getDefault();
         Task task1 = new Task("Простая задача1", "Описание простой задачи 1");
-        assertDoesNotThrow(() -> manager.addNewTask(task1));
+        assertDoesNotThrow(() -> manager.addAnyTypeTask(task1));
 
         Task task2 = new Task("Простая задача1", "Описание простой задачи 1");
-        Object expectedTask2id = manager.addNewTask(task2);
+        Object expectedTask2id = manager.addAnyTypeTask(task2);
         assertInstanceOf(Integer.class, expectedTask2id, "Должен возвращаться ID типа int");
 
     }

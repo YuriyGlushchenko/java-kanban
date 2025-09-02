@@ -40,19 +40,19 @@ class FileBackedTaskManagerTest {
         testFile = Files.createTempFile(tempDir, "test", ".csv").toFile();
         manager = new FileBackedTaskManager(testFile);
         task1 = new Task("Простая задача1", "Описание простой задачи 1");
-        task1Id = manager.addNewTask(task1);
+        task1Id = manager.addAnyTypeTask(task1);
         task2 = new Task("Простая задача2", "Описание простой задачи 2");
-        task2Id = manager.addNewTask(task2);
+        task2Id = manager.addAnyTypeTask(task2);
 
         epic1 = new Epic("Важный эпик1", "Описание эпика 1");
         epic2 = new Epic("Важный эпик2", "Описание эпика 2");
-        epic1Id = manager.addNewTask(epic1);
-        epic2Id = manager.addNewTask(epic2);
+        epic1Id = manager.addAnyTypeTask(epic1);
+        epic2Id = manager.addAnyTypeTask(epic2);
 
         subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1Id);
-        subTask1Id = manager.addNewTask(subTask1);
+        subTask1Id = manager.addAnyTypeTask(subTask1);
         subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1Id);
-        subTask2Id = manager.addNewTask(subTask2);
+        subTask2Id = manager.addAnyTypeTask(subTask2);
     }
 
     @Test
@@ -73,7 +73,7 @@ class FileBackedTaskManagerTest {
     void testSaveAndLoadEmptyFile() throws IOException {
         testFile = Files.createTempFile(tempDir, "test11", ".csv").toFile();
         manager = new FileBackedTaskManager(testFile);
-        manager.deleteAllTasks();
+        manager.clearManager();
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(testFile);
 
@@ -140,7 +140,7 @@ class FileBackedTaskManagerTest {
         assertEquals(2, manager.getAllTasks().size());
 
         // Удаляем одну задачу
-        manager.deleteTask(task1Id);
+        manager.deleteAnyTypeTask(task1Id);
 
         // Загружаем из файла
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(testFile);

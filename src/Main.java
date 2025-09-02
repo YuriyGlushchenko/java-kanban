@@ -11,21 +11,21 @@ public class Main {
         TaskManager manager = Managers.getDefault();
 
         Task task1 = new Task("Простая задача1", "Описание простой задачи 1");
-        manager.addNewTask(task1);
+        manager.addAnyTypeTask(task1);
         Task task2 = new Task("Простая задача2", "Описание простой задачи 2");
-        manager.addNewTask(task2);
+        manager.addAnyTypeTask(task2);
 
         Epic epic1 = new Epic("Важный эпик1", "описние эпика 1");
-        manager.addNewTask(epic1);
+        manager.addAnyTypeTask(epic1);
         SubTask subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1.getId());
-        manager.addNewTask(subTask1);
+        manager.addAnyTypeTask(subTask1);
         SubTask subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1.getId());
-        manager.addNewTask(subTask2);
+        manager.addAnyTypeTask(subTask2);
         SubTask subTask3 = new SubTask("Подзадача 3", "описание подзадачи3", epic1.getId());
-        manager.addNewTask(subTask3);
+        manager.addAnyTypeTask(subTask3);
 
         Epic epic2 = new Epic("Важный эпик2", "описние эпика 2");
-        manager.addNewTask(epic2);
+        manager.addAnyTypeTask(epic2);
 
 
         printAllTasks(manager);

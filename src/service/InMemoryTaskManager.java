@@ -152,7 +152,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
-    public void setCounter(int counter){
+    public void setCounter(int counter) {
         this.idCounter = counter;
     }
 

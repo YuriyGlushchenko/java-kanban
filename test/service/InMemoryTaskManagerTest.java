@@ -312,5 +312,4 @@ class InMemoryTaskManagerTest {
         assertTrue(historyAfter.stream().allMatch(t -> t.getType() == Type.TASK), "Задача должна остаться в истории");
     }
 
-
 }

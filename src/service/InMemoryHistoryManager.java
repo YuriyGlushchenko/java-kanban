@@ -71,7 +71,7 @@ public class InMemoryHistoryManager implements HistoryManager {
         historyMap.remove(id);
     }
 
-    public void removeNodes(List<Integer> idList){
+    public void removeNodes(List<Integer> idList) {
         idList.forEach(this::remove);
     }
 

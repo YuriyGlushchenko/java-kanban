@@ -8,12 +8,15 @@ public class Epic extends Task {
 
     public Epic(String title, String description) {
         super(title, description);
-        this.type = Type.EPIC;
     }
 
     public Epic(String title, String description, int id) {
         super(title, description, id);
-        this.type = Type.EPIC;
+    }
+
+    @Override
+    public Type getType() {
+        return Type.EPIC;
     }
 
     public void addSubTaskToEpic(SubTask subTask) {
@@ -26,6 +29,10 @@ public class Epic extends Task {
 
     public void removeFromEpicSubTasks(int id) {
         subTasks.remove(id);
+    }
+
+    public void deleteAllEpicSubTasks(){
+        subTasks.clear();
     }
 
     @Override

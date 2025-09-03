@@ -45,27 +45,22 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     public void deleteAllSubTasks() {
-        //копия коллекции для безопасного перебора без ConcurrentModificationException
-        ArrayList<SubTask> subTasksToDelete = new ArrayList<>(subTasks.values());
-
-        for (SubTask subTask : subTasksToDelete) {
-            deleteSubTask(subTask.getId());
-        }
+        epics.values().forEach(Epic::deleteAllEpicSubTasks);
+        subTasks.keySet().forEach(historyManager::remove);
+        subTasks.clear();
     }
 
     public void deleteAllEpics() {
-        ArrayList<Epic> epicsToDelete = new ArrayList<>(epics.values());
-        for (Epic epic : epicsToDelete) {
-            deleteEpic(epic.getId());
-        }
+        subTasks.keySet().forEach(historyManager::remove);
+        epics.keySet().forEach(historyManager::remove);
+        epics.clear();
+        subTasks.clear();
     }
 
     @Override
     public void deleteAllTasks() {
-        ArrayList<Task> tasksToDelete = new ArrayList<>(tasks.values());
-        for (Task task : tasksToDelete) {
-            deleteTask(task.getId());
-        }
+        tasks.keySet().forEach(historyManager::remove);
+        tasks.clear();
     }
 
     @Override
@@ -155,6 +150,10 @@ public class InMemoryTaskManager implements TaskManager {
             case SUBTASK -> deleteSubTask(id);
             case EPIC -> deleteEpic(id);
         }
+    }
+
+    public void setCounter(int counter){
+        this.idCounter = counter;
     }
 
     private void deleteTask(int id) {

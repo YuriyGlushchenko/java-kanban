@@ -12,23 +12,19 @@ public class Task {
     public Task(String title, String description) {
         this.title = title;
         this.description = description;
-        this.type = Type.TASK;
-
     }
 
     public Task(String title, String description, int id) {
         this.title = title;
         this.description = description;
         this.id = id;
-        this.type = Type.TASK;
     }
 
     public Task() {
-        this.type = Type.TASK;
     }
 
     public Type getType() {
-        return this.type;
+        return Type.TASK;
     }
 
     public String getTitle() {

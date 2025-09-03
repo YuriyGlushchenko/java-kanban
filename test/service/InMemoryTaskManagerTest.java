@@ -1,9 +1,6 @@
 package service;
 
-import model.Epic;
-import model.Status;
-import model.SubTask;
-import model.Task;
+import model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -260,7 +257,7 @@ class InMemoryTaskManagerTest {
 
     @Test
     void deleteAllTasks_shouldNotAffectEpicsAndSubTasks() {
-         manager.deleteAllTasks();
+        manager.deleteAllTasks();
 
         assertTrue(manager.getAllTasks().isEmpty());
         assertEquals(2, manager.getAllEpics().size());
@@ -272,5 +269,48 @@ class InMemoryTaskManagerTest {
         // Act & Assert
         assertThrows(NoSuchElementException.class, () -> manager.deleteAnyTypeTask(999));
     }
+
+    @Test
+    void deleteAllSubTasks_shouldRemoveSubTasksFromHistory() {
+        manager.getSubTaskById(subTask1Id);
+        manager.getSubTaskById(subTask2Id);
+        manager.getEpicById(epic1Id); // Эпик тоже в истории
+
+        // Проверяем, что подзадачи в истории
+        List<Task> historyBefore = manager.getHistory();
+        assertEquals(3, historyBefore.size(), "В истории должно быть 3 задачи перед удалением");
+
+        // Удаляем все подзадачи
+        manager.deleteAllSubTasks();
+
+        // Проверяем, что подзадачи удалены из истории, но эпик остался
+        List<Task> historyAfter = manager.getHistory();
+        assertEquals(1, historyAfter.size(), "В истории должен остаться только эпик");
+        assertEquals(epic1Id, historyAfter.get(0).getId(), "В истории должен остаться эпик");
+    }
+
+    @Test
+    void deleteAllEpics_shouldRemoveEpicsAndSubTasksFromHistory() {
+        // Добавляем все задачи в историю
+        manager.getEpicById(epic1Id);
+        manager.getEpicById(epic2Id);
+        manager.getSubTaskById(subTask2Id);
+        manager.getSubTaskById(subTask1Id);
+        manager.getTaskById(task1Id);
+        manager.getTaskById(task2Id);
+
+        // Проверяем, что все задачи в истории
+        List<Task> historyBefore = manager.getHistory();
+        assertEquals(6, historyBefore.size(), "В истории должно быть 6 задач перед удалением");
+
+        // Удаляем все эпики
+        manager.deleteAllEpics();
+
+        // Проверяем, что эпики и подзадачи удалены из истории
+        List<Task> historyAfter = manager.getHistory();
+        assertEquals(2, historyAfter.size(), "В истории должно быть 2 задач после удаления");
+        assertTrue(historyAfter.stream().allMatch(t -> t.getType() == Type.TASK), "Задача должна остаться в истории");
+    }
+
 
 }

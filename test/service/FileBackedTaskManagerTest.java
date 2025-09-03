@@ -150,4 +150,38 @@ class FileBackedTaskManagerTest {
         assertEquals("Простая задача2", loadedManager.getAllTasks().getFirst().getTitle());
     }
 
+    @Test
+    void loadFromFile_shouldSetCorrectCounterWhenFileHasTasks() throws IOException {
+        List<String> testData = List.of(
+                "id,type,name,status,description,epic",
+                "1,TASK,Task 1,NEW,Description 1,",
+                "5,EPIC,Epic 1,NEW,Epic description 1,",
+                "10,SUBTASK,SubTask 1,NEW,Sub description 1,5",
+                "3,TASK,Task 2,NEW,Description 2,"
+        );
+        Files.write(testFile.toPath(), testData);
+
+        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(testFile);
+
+        // Проверяем, что counter у loadedManager установлен корректно (максимальный id = 10)
+        Task newTask = new Task("New Task", "New Description");
+        int newId = loadedManager.addAnyTypeTask(newTask);
+
+        assertEquals(11, newId, "Новый ID должен быть на 1 больше максимального из файла");
+    }
+
+    @Test
+    void loadFromFile_shouldSetCounterToZeroWhenFileEmpty() throws IOException {
+        // Файл только с заголовком
+        List<String> testData = List.of("id,type,name,status,description,epic");
+        Files.write(testFile.toPath(), testData);
+
+        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(testFile);
+
+        Task newTask = new Task("New Task", "New Description");
+        int newId = loadedManager.addAnyTypeTask(newTask);
+
+        assertEquals(1, newId, "При пустом файле counter должен начинаться с 1");
+    }
+
 }

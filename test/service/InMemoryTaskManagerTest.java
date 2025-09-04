@@ -123,14 +123,15 @@ class InMemoryTaskManagerTest {
         assertEquals(2, manager.getAllSubTasks().size());
         assertEquals(6, manager.getAllTypesTask().size());
 
-        manager.clearManager();
+        manager.deleteAllEpics();
+        manager.deleteAllTasks();
+        manager.deleteAllSubTasks();
 
         assertTrue(manager.getAllTasks().isEmpty());
         assertTrue(manager.getAllEpics().isEmpty());
         assertTrue(manager.getAllSubTasks().isEmpty());
         assertTrue(manager.getAllTypesTask().isEmpty());
     }
-
 
     @Test
     void getTaskByIdShouldReturnTask() {

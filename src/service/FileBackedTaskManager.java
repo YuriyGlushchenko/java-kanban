@@ -46,11 +46,11 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         manager2.getAllTypesTask().forEach(System.out::println);
     }
 
-    @Override
-    public void clearManager() {
-        super.clearManager();
-        save();
-    }
+//    @Override
+//    public void clearManager() {
+//        super.clearManager();
+//        save();
+//    }
 
     @Override
     public int addAnyTypeTask(Task newTask) {

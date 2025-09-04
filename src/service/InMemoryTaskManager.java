@@ -36,14 +36,6 @@ public class InMemoryTaskManager implements TaskManager {
         return allTasks;
     }
 
-
-    public void clearManager() {
-        tasks.clear();
-        subTasks.clear();
-        epics.clear();
-        historyManager.clearHistory();
-    }
-
     public void deleteAllSubTasks() {
         epics.values().forEach(Epic::deleteAllEpicSubTasks);
         subTasks.keySet().forEach(historyManager::remove);

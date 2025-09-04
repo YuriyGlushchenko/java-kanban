@@ -3,25 +3,28 @@ package model;
 import java.util.Objects;
 
 public class Task {
+    protected Type type;
     private int id = -1;
     private String title;
     private Status status = Status.NEW;
     private String description;
-
-    public void setId(int id) {
-        if (this.id == -1) {
-            this.id = id;
-        } else {
-            throw new UnsupportedOperationException("Изменение id задачи запрещено");
-        }
-    }
 
     public Task(String title, String description) {
         this.title = title;
         this.description = description;
     }
 
+    public Task(String title, String description, int id) {
+        this.title = title;
+        this.description = description;
+        this.id = id;
+    }
+
     public Task() {
+    }
+
+    public Type getType() {
+        return Type.TASK;
     }
 
     public String getTitle() {
@@ -42,6 +45,14 @@ public class Task {
 
     public int getId() {
         return id;
+    }
+
+    public void setId(int id) {
+        if (this.id == -1) {
+            this.id = id;
+        } else {
+            throw new UnsupportedOperationException("Изменение id задачи запрещено");
+        }
     }
 
     public Status getStatus() {

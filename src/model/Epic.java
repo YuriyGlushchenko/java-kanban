@@ -5,11 +5,18 @@ import java.util.HashMap;
 
 public class Epic extends Task {
     private final HashMap<Integer, SubTask> subTasks = new HashMap<>();
-    private boolean allIsDone = false;
-    private boolean inProgress = false;
 
     public Epic(String title, String description) {
         super(title, description);
+    }
+
+    public Epic(String title, String description, int id) {
+        super(title, description, id);
+    }
+
+    @Override
+    public Type getType() {
+        return Type.EPIC;
     }
 
     public void addSubTaskToEpic(SubTask subTask) {
@@ -22,31 +29,26 @@ public class Epic extends Task {
 
     public void removeFromEpicSubTasks(int id) {
         subTasks.remove(id);
-        checkEpicStatus();
+    }
+
+    public void deleteAllEpicSubTasks() {
+        subTasks.clear();
     }
 
     @Override
     public void setStatus(Status status) {
-        if ((allIsDone && status == Status.DONE)
-                || (inProgress && status == Status.IN_PROGRESS)
-                || (!allIsDone && !inProgress && status == Status.NEW)) {
-            super.setStatus(status);
-        }
-    }
+        boolean allDone = isAllDone();
+        boolean inProgress = isInProgress();
 
-    public void checkEpicStatus() {
-        if (isAllDone() && !subTasks.isEmpty()) {
-            allIsDone = true;
-            setStatus(Status.DONE);
-        } else if (isInProgress()) {
-            allIsDone = false;
-            inProgress = true;
-            setStatus(Status.IN_PROGRESS);
-        } else {
-            allIsDone = false;
-            inProgress = false;
-            setStatus(Status.NEW);
+        Status newStatus = Status.NEW;
+
+        if (allDone && !subTasks.isEmpty()) {
+            newStatus = Status.DONE;
+        } else if (!allDone && inProgress) {
+            newStatus = Status.IN_PROGRESS;
         }
+
+        if (getStatus() != newStatus) super.setStatus(newStatus);
     }
 
     private boolean isAllDone() {

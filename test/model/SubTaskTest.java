@@ -1,9 +1,9 @@
-import model.Epic;
-import model.Status;
-import model.SubTask;
+package model;
+
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SubTaskTest {
     private final Epic testEpic = new Epic("model.Epic Title", "model.Epic Description");
@@ -12,12 +12,12 @@ class SubTaskTest {
 
     @Test
     void constructorShouldSetTitleAndDescription() {
-        SubTask subTask = new SubTask(TEST_TITLE, TEST_DESCRIPTION, testEpic);
+        SubTask subTask = new SubTask(TEST_TITLE, TEST_DESCRIPTION, testEpic.getId());
 
         assertAll(
                 () -> assertEquals(TEST_TITLE, subTask.getTitle()),
                 () -> assertEquals(TEST_DESCRIPTION, subTask.getDescription()),
-                () -> assertEquals(testEpic, subTask.getParentEpic()),
+                () -> assertEquals(testEpic.getId(), subTask.getParentEpicId()),
                 () -> assertEquals(Status.NEW, subTask.getStatus())
         );
     }

@@ -11,21 +11,21 @@ public class Main {
         TaskManager manager = Managers.getDefault();
 
         Task task1 = new Task("Простая задача1", "Описание простой задачи 1");
-        manager.addNewTask(task1);
+        manager.addAnyTypeTask(task1);
         Task task2 = new Task("Простая задача2", "Описание простой задачи 2");
-        manager.addNewTask(task2);
+        manager.addAnyTypeTask(task2);
 
         Epic epic1 = new Epic("Важный эпик1", "описние эпика 1");
-        manager.addNewTask(epic1);
-        SubTask subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1);
-        manager.addNewTask(subTask1);
-        SubTask subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1);
-        manager.addNewTask(subTask2);
-        SubTask subTask3 = new SubTask("Подзадача 3", "описание подзадачи3", epic1);
-        manager.addNewTask(subTask3);
+        manager.addAnyTypeTask(epic1);
+        SubTask subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1.getId());
+        manager.addAnyTypeTask(subTask1);
+        SubTask subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1.getId());
+        manager.addAnyTypeTask(subTask2);
+        SubTask subTask3 = new SubTask("Подзадача 3", "описание подзадачи3", epic1.getId());
+        manager.addAnyTypeTask(subTask3);
 
         Epic epic2 = new Epic("Важный эпик2", "описние эпика 2");
-        manager.addNewTask(epic2);
+        manager.addAnyTypeTask(epic2);
 
 
         printAllTasks(manager);
@@ -33,7 +33,7 @@ public class Main {
 
     private static void printAllTasks(TaskManager manager) {
         System.out.println("Задачи:");
-        for (Task task : manager.getTasks()) {
+        for (Task task : manager.getAllTasks()) {
             System.out.println(task);
         }
         System.out.println("Эпики:");
@@ -45,7 +45,7 @@ public class Main {
             }
         }
         System.out.println("Подзадачи:");
-        for (Task subtask : manager.getAllSubTask()) {
+        for (Task subtask : manager.getAllSubTasks()) {
             System.out.println(subtask);
         }
 

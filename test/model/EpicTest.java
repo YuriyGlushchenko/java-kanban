@@ -1,6 +1,5 @@
-import model.Epic;
-import model.Status;
-import model.SubTask;
+package model;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import service.InMemoryTaskManager;
@@ -27,13 +26,13 @@ class EpicTest {
         // Создаём 2 эпика. У первого будет 2 подзадачи. Второй пустой.
         epic1 = new Epic("Важный эпик1", "описние эпика 1");
         epic2 = new Epic("Важный эпик2", "описние эпика 2");
-        epic1Id = manager.addNewTask(epic1);
-        epic2Id = manager.addNewTask(epic2);
+        epic1Id = manager.addAnyTypeTask(epic1);
+        epic2Id = manager.addAnyTypeTask(epic2);
 
-        subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1);
-        subTask1Id = manager.addNewTask(subTask1);
-        subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1);
-        subTask2Id = manager.addNewTask(subTask2);
+        subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1Id);
+        subTask1Id = manager.addAnyTypeTask(subTask1);
+        subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1Id);
+        subTask2Id = manager.addAnyTypeTask(subTask2);
     }
 
     @Test
@@ -55,6 +54,7 @@ class EpicTest {
     @Test
     public void shouldBeEpicStatusIN_PROGRESSWhenSubTaskIsIN_PROGRESS() {
         subTask1.setStatus(Status.IN_PROGRESS);
+        manager.updateTask(subTask1);
         assertEquals(Status.IN_PROGRESS, epic1.getStatus());
     }
 
@@ -62,6 +62,8 @@ class EpicTest {
     public void shouldBeEpicStatusDONEWhenAllSubTaskIsDONE() {
         subTask1.setStatus(Status.DONE);
         subTask2.setStatus(Status.DONE);
+        manager.updateTask(subTask1);
+        manager.updateTask(subTask2);
         assertEquals(Status.DONE, epic1.getStatus());
     }
 

@@ -71,10 +71,14 @@ public class InMemoryHistoryManager implements HistoryManager {
         historyMap.remove(id);
     }
 
+    public void removeNodes(List<Integer> idList) {
+        idList.forEach(this::remove);
+    }
+
     static class HistoryNode {
-        private Task data;
         HistoryNode next;
         HistoryNode prev;
+        private Task data;
 
         public HistoryNode(Task data) {
             this.data = data;

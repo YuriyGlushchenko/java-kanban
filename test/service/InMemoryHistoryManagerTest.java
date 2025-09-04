@@ -1,9 +1,10 @@
+package service;
+
 import model.Epic;
 import model.SubTask;
 import model.Task;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import service.InMemoryHistoryManager;
 
 import java.util.List;
 
@@ -31,9 +32,9 @@ class InMemoryHistoryManagerTest {
         epic1.setId(3);
         epic2 = new Epic("Важный эпик2", "описние эпика 2");
         epic2.setId(4);
-        subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1);
+        subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1.getId());
         subTask1.setId(5);
-        subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1);
+        subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1.getId());
         subTask2.setId(6);
     }
 

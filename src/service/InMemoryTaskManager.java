@@ -156,7 +156,7 @@ public class InMemoryTaskManager implements TaskManager {
     private void deleteSubTask(int id) {
         SubTask subTaskToDelete = subTasks.get(id);
         Epic parentEpic = epics.get(subTaskToDelete.getParentEpicId());
-        parentEpic.removeFromEpicSubTasks(subTaskToDelete.getId());
+        parentEpic.deleteSubTaskFromEpic(subTaskToDelete.getId());
         historyManager.remove(id);
         subTasks.remove(id);
         checkEpicStatusIsChanged(parentEpic.getId());
@@ -197,7 +197,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     private void checkEpicStatusIsChanged(int epicId) {
         Epic epic = epics.get(epicId);
-        epic.setStatus(Status.NEW);  // Можно указать любой статус, метод просто запускает проверку статуса Эпика
+        epic.checkEpicState();
     }
 
 }

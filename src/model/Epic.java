@@ -1,10 +1,12 @@
 package model;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.*;
 
 public class Epic extends Task {
     private final HashMap<Integer, SubTask> subTasks = new HashMap<>();
+    LocalDateTime endTime;
 
     public Epic(String title, String description) {
         super(title, description);
@@ -27,7 +29,7 @@ public class Epic extends Task {
         return new ArrayList<>(subTasks.values());
     }
 
-    public void removeFromEpicSubTasks(int id) {
+    public void deleteSubTaskFromEpic(int id) {
         subTasks.remove(id);
     }
 
@@ -37,18 +39,27 @@ public class Epic extends Task {
 
     @Override
     public void setStatus(Status status) {
-        boolean allDone = isAllDone();
-        boolean inProgress = isInProgress();
+        checkStatus();
+    }
 
-        Status newStatus = Status.NEW;
+    public void checkEpicState() {
+        checkStatus();
+        calculateDuration();
+        evaluateStartTime();
+        calculateEndTime();
+    }
 
-        if (allDone && !subTasks.isEmpty()) {
-            newStatus = Status.DONE;
-        } else if (!allDone && inProgress) {
-            newStatus = Status.IN_PROGRESS;
-        }
+    @Override
+    public void setDuration(Duration duration) {
+    }
 
-        if (getStatus() != newStatus) super.setStatus(newStatus);
+    @Override
+    public void setStartTime(LocalDateTime startTime) {
+    }
+
+    @Override
+    public LocalDateTime getEndTime() {
+        return endTime;
     }
 
     private boolean isAllDone() {
@@ -65,6 +76,47 @@ public class Epic extends Task {
                 .stream()
                 .map(Task::getStatus)
                 .anyMatch(status -> status == Status.DONE || status == Status.IN_PROGRESS); // для пустого потока False
+    }
+
+    private void checkStatus() {
+        boolean allDone = isAllDone();
+        boolean inProgress = isInProgress();
+
+        Status newStatus = Status.NEW;
+
+        if (allDone && !subTasks.isEmpty()) {
+            newStatus = Status.DONE;
+        } else if (!allDone && inProgress) {
+            newStatus = Status.IN_PROGRESS;
+        }
+
+        if (getStatus() != newStatus) super.setStatus(newStatus);
+    }
+
+    private void calculateDuration() {
+        Optional<Duration> actualDurationOptional = subTasks
+                .values()
+                .stream()
+                .map(Task::getDuration)
+                .filter(Objects::nonNull)
+                .reduce(Duration::plus);
+        actualDurationOptional.ifPresent(super::setDuration);
+    }
+
+    private void evaluateStartTime(){
+        Optional<LocalDateTime> actualStartTimeOptional = subTasks
+                .values()
+                .stream()
+                .map(Task::getStartTime)
+                .filter(Objects::nonNull)
+                .min(Comparator.naturalOrder());
+        actualStartTimeOptional.ifPresent(super::setStartTime);
+    }
+
+    private void calculateEndTime(){
+        if(getStartTime() != null && getDuration() != null){
+            endTime = getStartTime().plus(getDuration());
+        }
     }
 
 

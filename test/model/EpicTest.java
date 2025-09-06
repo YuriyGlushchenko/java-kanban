@@ -5,6 +5,11 @@ import org.junit.jupiter.api.Test;
 import service.InMemoryTaskManager;
 import service.TaskManager;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class EpicTest {
@@ -69,8 +74,8 @@ class EpicTest {
 
     @Test
     public void shouldBeEpicStatusNEWWhenDeleteAllSubTask() {
-        epic1.removeFromEpicSubTasks(subTask1Id);
-        epic1.removeFromEpicSubTasks(subTask2Id);
+        epic1.deleteSubTaskFromEpic(subTask1Id);
+        epic1.deleteSubTaskFromEpic(subTask2Id);
         assertEquals(Status.NEW, epic1.getStatus());
     }
 
@@ -80,8 +85,8 @@ class EpicTest {
         assertTrue(epic1.getEpicSubTasks().contains(subTask1));
         assertTrue(epic1.getEpicSubTasks().contains(subTask2));
 
-        epic1.removeFromEpicSubTasks(subTask1Id);
-        epic1.removeFromEpicSubTasks(subTask2Id);
+        epic1.deleteSubTaskFromEpic(subTask1Id);
+        epic1.deleteSubTaskFromEpic(subTask2Id);
 
         assertEquals(0, epic1.getEpicSubTasks().size());
         assertFalse(epic1.getEpicSubTasks().contains(subTask1));
@@ -93,6 +98,89 @@ class EpicTest {
         assertFalse(epic2.getEpicSubTasks().contains(subTask1));
         epic2.addSubTaskToEpic(subTask1);
         assertTrue(epic2.getEpicSubTasks().contains(subTask1));
+    }
+
+    @Test
+    void calculateDuration_shouldReturnZeroWhenNoSubTasks() {
+        epic1.checkEpicState(); // тест через публичный метод, внутри вызывается calculateDuration()
+
+        assertNull(epic1.getDuration());
+    }
+
+    @Test
+    void calculateDuration_shouldReturnSumOfSubTasksDurations() {
+        subTask1.setDuration(Duration.ofHours(2));
+        subTask2.setDuration(Duration.ofMinutes(90));
+
+        epic1.checkEpicState(); // тест через публичный метод, внутри вызывается calculateDuration()
+
+        assertNotNull(epic1.getDuration());
+        assertEquals(Duration.ofMinutes(210), epic1.getDuration());
+        assertEquals(3, epic1.getDuration().toHours());
+        assertEquals(30, epic1.getDuration().toMinutesPart());
+    }
+
+    @Test
+    void calculateDuration_shouldHandleNullDurations() {
+        subTask1.setDuration(Duration.ofHours(2));
+        subTask2.setDuration(Duration.ofMinutes(90));
+        SubTask subTask3 = new SubTask("SubTask 3", "Description 3", epic1Id);
+        // duration is null
+
+        epic1.addSubTaskToEpic(subTask3);
+
+        // Act
+        epic1.checkEpicState(); // тест через публичный метод, внутри вызывается calculateDuration()
+
+        // Assert
+        assertNotNull(epic1.getDuration());
+        assertEquals(Duration.ofMinutes(210), epic1.getDuration());
+    }
+
+    @Test
+    void calculateDuration_shouldHandleOnlyNullDurations() {
+        epic1.checkEpicState(); // тест через публичный метод, внутри вызывается calculateDuration()
+
+        assertNull(epic1.getDuration());
+    }
+
+    @Test
+    void evaluateStartTime_shouldReturnNullWhenNoSubTasks() {
+        Epic epic = new Epic("Test Epic", "Test Description");
+        manager.addAnyTypeTask(epic);
+        epic.checkEpicState();  // тест через публичный метод, внутри вызывается evaluateStartTime()
+
+        assertNull(epic.getStartTime());
+    }
+
+    @Test
+    void evaluateStartTime_shouldReturnEarliestStartTime() {
+        SubTask subTask3 = new SubTask("SubTask 3", "Description 3", epic1Id);
+        LocalDateTime earlyTime = LocalDateTime.of(2024, 1, 10, 9, 0);
+        LocalDateTime middleTime = LocalDateTime.of(2024, 1, 10, 12, 0);
+        LocalDateTime lateTime = LocalDateTime.of(2024, 1, 10, 15, 0);
+
+        subTask1.setStartTime(middleTime);
+        subTask2.setStartTime(earlyTime);
+        subTask3.setStartTime(lateTime);
+
+        epic1.addSubTaskToEpic(subTask3);
+
+        epic1.checkEpicState();  // тест через публичный метод, внутри вызывается evaluateStartTime()
+
+        assertNotNull(epic1.getStartTime());
+        assertEquals(earlyTime, epic1.getStartTime());
+    }
+
+    @Test
+    void evaluateStartTime_shouldReturnNullWhenAllStartTimesAreNull() throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+//        epic1.checkEpicState();  // тест через публичный метод, внутри вызывается evaluateStartTime()
+        Method calculateDurationMethod = Epic.class.getDeclaredMethod("calculateDuration");
+        calculateDurationMethod.setAccessible(true);
+        calculateDurationMethod.invoke(epic1);
+
+
+        assertNull(epic1.getStartTime());
     }
 
 

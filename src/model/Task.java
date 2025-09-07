@@ -3,6 +3,7 @@ package model;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.Optional;
 
 public class Task {
     protected Type type;
@@ -10,7 +11,7 @@ public class Task {
     private String title;
     private Status status = Status.NEW;
     private String description;
-    private Duration duration;
+    private Duration duration = Duration.ZERO;
     private LocalDateTime startTime;
 
     public Task(String title, String description) {
@@ -89,7 +90,11 @@ public class Task {
     }
 
     public LocalDateTime getEndTime(){
-        return startTime.plus(duration);
+        if (startTime != null){
+            return startTime.plus(duration);
+        } else {
+            return null;
+        }
     }
 
     public Duration getDuration() {
@@ -100,8 +105,8 @@ public class Task {
         this.duration = duration;
     }
 
-    public LocalDateTime getStartTime() {
-        return startTime;
+    public Optional<LocalDateTime> getStartTime() {
+        return Optional.ofNullable(startTime);
     }
 
     public void setStartTime(LocalDateTime startTime) {

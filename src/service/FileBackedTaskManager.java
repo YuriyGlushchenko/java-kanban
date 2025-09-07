@@ -128,7 +128,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     private void save() {
-        String header = "id,type,name,status,description,epic";
+        String header = "id,type,name,status,description,startTime,duration,epic";
 
         Stream<String> convertedTasksStream = Stream.of(tasks, subTasks, epics)
                 .flatMap(map -> map.values().stream())

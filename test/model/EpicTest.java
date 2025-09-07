@@ -101,10 +101,10 @@ class EpicTest {
     }
 
     @Test
-    void calculateDuration_shouldReturnZeroWhenNoSubTasks() {
+    void calculateDuration_shouldReturnZeroDurationWhenNoSubTasks() {
         epic1.checkEpicState(); // тест через публичный метод, внутри вызывается calculateDuration()
 
-        assertNull(epic1.getDuration());
+        assertTrue(epic1.getDuration().equals(Duration.ZERO));
     }
 
     @Test
@@ -129,28 +129,19 @@ class EpicTest {
 
         epic1.addSubTaskToEpic(subTask3);
 
-        // Act
         epic1.checkEpicState(); // тест через публичный метод, внутри вызывается calculateDuration()
 
-        // Assert
         assertNotNull(epic1.getDuration());
         assertEquals(Duration.ofMinutes(210), epic1.getDuration());
     }
 
     @Test
-    void calculateDuration_shouldHandleOnlyNullDurations() {
-        epic1.checkEpicState(); // тест через публичный метод, внутри вызывается calculateDuration()
-
-        assertNull(epic1.getDuration());
-    }
-
-    @Test
-    void evaluateStartTime_shouldReturnNullWhenNoSubTasks() {
+    void evaluateStartTime_shouldReturnEmptyOptionalWhenNoSubTasks() {
         Epic epic = new Epic("Test Epic", "Test Description");
         manager.addAnyTypeTask(epic);
         epic.checkEpicState();  // тест через публичный метод, внутри вызывается evaluateStartTime()
 
-        assertNull(epic.getStartTime());
+        assertTrue(epic.getStartTime().isEmpty());
     }
 
     @Test
@@ -168,19 +159,61 @@ class EpicTest {
 
         epic1.checkEpicState();  // тест через публичный метод, внутри вызывается evaluateStartTime()
 
-        assertNotNull(epic1.getStartTime());
-        assertEquals(earlyTime, epic1.getStartTime());
+        assertTrue(epic1.getStartTime().isPresent());
+        assertEquals(earlyTime, epic1.getStartTime().get());
     }
 
     @Test
-    void evaluateStartTime_shouldReturnNullWhenAllStartTimesAreNull() throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
-//        epic1.checkEpicState();  // тест через публичный метод, внутри вызывается evaluateStartTime()
+    void evaluateStartTime_shouldReturnEmptyOptionalWhenAllStartTimesAreNull() throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+        // тест через рефлексию
         Method calculateDurationMethod = Epic.class.getDeclaredMethod("calculateDuration");
         calculateDurationMethod.setAccessible(true);
         calculateDurationMethod.invoke(epic1);
 
 
-        assertNull(epic1.getStartTime());
+        assertTrue(epic1.getStartTime().isEmpty());
+    }
+
+    @Test
+    void calculateEndTime_shouldSetEndTimeToNullWhenNoSubtasks() {
+        epic2.checkEpicState();
+
+        assertNull(epic2.getEndTime());
+    }
+
+    @Test
+    void calculateEndTime_shouldSetEndTimeToLatestSubtaskEndTime() {
+
+        // Подзадача 1: Начинается рано, но заканчивается не позже всех
+        LocalDateTime start1 = LocalDateTime.of(2024, 6, 1, 9, 0); // 9:00
+        Duration duration1 = Duration.ofHours(1); // Длительность 1 час
+        LocalDateTime end1 = start1.plus(duration1); // Окончание в 10:00
+
+        subTask1.setStartTime(start1);
+        subTask1.setDuration(duration1);
+
+        // Подзадача 2: Начинается позже, но заканчивается ПОЗЖЕ всех (самая поздняя)
+        LocalDateTime start2 = LocalDateTime.of(2024, 6, 1, 11, 0); // 11:00
+        Duration duration2 = Duration.ofHours(3); // Длительность 3 часа
+        LocalDateTime expectedEndTime = start2.plus(duration2); // Окончание в 14:00 <- Ожидаемый endTime эпика
+
+        subTask2.setStartTime(start2);
+        subTask2.setDuration(duration2);
+
+        // Подзадача 3: Начинается позже всех, но короткая
+        LocalDateTime start3 = LocalDateTime.of(2024, 6, 1, 13, 0); // 13:00
+        Duration duration3 = Duration.ofMinutes(30); // Длительность 30 мин
+        LocalDateTime end3 = start3.plus(duration3); // Окончание в 13:30
+        SubTask subTask3 = new SubTask("SubTask 3", "Desc3", epic1Id);
+        subTask3.setStartTime(start3);
+        subTask3.setDuration(duration3);
+        epic1.addSubTaskToEpic(subTask3);
+
+        epic1.checkEpicState();
+
+        assertEquals(expectedEndTime,
+                epic1.getEndTime(),
+                "endTime эпика должен быть равен endTime самой поздней подзадачи (subTask2)");
     }
 
 

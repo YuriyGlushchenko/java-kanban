@@ -98,25 +98,30 @@ public class Epic extends Task {
                 .values()
                 .stream()
                 .map(Task::getDuration)
-                .filter(Objects::nonNull)
+//                .filter(Objects::nonNull)
                 .reduce(Duration::plus);
         actualDurationOptional.ifPresent(super::setDuration);
     }
 
-    private void evaluateStartTime(){
+    private void evaluateStartTime() {
         Optional<LocalDateTime> actualStartTimeOptional = subTasks
                 .values()
                 .stream()
                 .map(Task::getStartTime)
-                .filter(Objects::nonNull)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .min(Comparator.naturalOrder());
         actualStartTimeOptional.ifPresent(super::setStartTime);
     }
 
-    private void calculateEndTime(){
-        if(getStartTime() != null && getDuration() != null){
-            endTime = getStartTime().plus(getDuration());
-        }
+    private void calculateEndTime() {
+        Optional<LocalDateTime> actualEndTimeOptional = subTasks
+                .values()
+                .stream()
+                .map(Task::getEndTime)
+                .filter(Objects::nonNull)
+                .max(Comparator.naturalOrder());
+        actualEndTimeOptional.ifPresent(d -> this.endTime = d);
     }
 
 

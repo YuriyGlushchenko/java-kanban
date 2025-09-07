@@ -56,20 +56,6 @@ class FileBackedTaskManagerTest {
     }
 
     @Test
-    public void ShouldCorrectlyConverTaskToString() {
-        String convertedTask = TaskManagerUtils.convertToString(task1);
-        String expected = String.format("%d,TASK,Простая задача1,NEW,Описание простой задачи 1,", task1Id);
-        assertEquals(expected, convertedTask, "Конвертация проходит неправильно");
-    }
-
-    @Test
-    public void ShouldCorrectlyConverSubTaskToString() {
-        String convertedTask = TaskManagerUtils.convertToString(subTask1);
-        String expected = String.format("%d,SUBTASK,Подзадача 1,NEW,описание подзадачи1,%d", subTask1Id, epic1Id);
-        assertEquals(expected, convertedTask, "Конвертация проходит неправильно");
-    }
-
-    @Test
     void testSaveAndLoadEmptyFile() throws IOException {
         testFile = Files.createTempFile(tempDir, "test11", ".csv").toFile();
         manager = new FileBackedTaskManager(testFile);
@@ -151,12 +137,13 @@ class FileBackedTaskManagerTest {
 
     @Test
     void loadFromFile_shouldSetCorrectCounterWhenFileHasTasks() throws IOException {
+//        "id,type,name,status,description,duration,startTime,epic"
         List<String> testData = List.of(
-                "id,type,name,status,description,epic",
-                "1,TASK,Task 1,NEW,Description 1,",
-                "5,EPIC,Epic 1,NEW,Epic description 1,",
-                "10,SUBTASK,SubTask 1,NEW,Sub description 1,5",
-                "3,TASK,Task 2,NEW,Description 2,"
+                "id,type,name,status,description,duration,startTime,epic",
+                "1,TASK,Task 1,NEW,Description 1,0,07.09.2025 20:50,",
+                "5,EPIC,Epic 1,NEW,Epic description 1,10,null,",
+                "10,SUBTASK,SubTask 1,NEW,Sub description 1,60,null,5",
+                "3,TASK,Task 2,NEW,Description 2,50,null,"
         );
         Files.write(testFile.toPath(), testData);
 

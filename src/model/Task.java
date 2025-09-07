@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
 
-public class Task {
+public class Task implements Comparable<Task> {
     protected Type type;
     private int id = -1;
     private String title;
@@ -111,5 +111,20 @@ public class Task {
 
     public void setStartTime(LocalDateTime startTime) {
         this.startTime = startTime;
+    }
+
+    @Override
+    public int compareTo(Task other) {
+        if (this.startTime == null && other.startTime == null) {
+            return 0;
+        }
+        if (this.startTime == null) {
+            return 1;
+        }
+        if (other.startTime == null) {
+            return -1;
+        }
+
+        return this.startTime.compareTo(other.startTime);
     }
 }

@@ -106,7 +106,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             int maxId = maxIdOptional.orElse(-1);
             loadedManager.setCounter(maxId);
 
-            // сначал нужно восстановить все эпики и таски и только потом SubTask, т.к. они содержат ссылки на Epic.
+            // Сначала нужно восстановить все эпики и таски и только потом SubTask, т.к. они содержат ссылки на Epic.
             Map<Boolean, List<String>> taskStrings = Arrays
                     .stream(dataWithoutHeader)
                     .collect(Collectors.partitioningBy(str -> !str.split(",")[1].equals("SUBTASK")));
@@ -128,7 +128,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     private void save() {
-        String header = "id,type,name,status,description,startTime,duration,epic";
+        String header = "id,type,name,status,description,duration,startTime,epic";
 
         Stream<String> convertedTasksStream = Stream.of(tasks, subTasks, epics)
                 .flatMap(map -> map.values().stream())

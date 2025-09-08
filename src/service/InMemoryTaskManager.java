@@ -2,6 +2,7 @@ package service;
 
 import model.*;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -125,7 +126,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void updateTask(Task task) {
         Type taskType = task.getType();
-        if(task.getStartTime().isPresent() && task.getType() != Type.EPIC){
+        if (task.getStartTime().isPresent() && task.getType() != Type.EPIC) {
             prioritizedTasks.add(task);
         }
         switch (taskType) {
@@ -154,14 +155,14 @@ public class InMemoryTaskManager implements TaskManager {
         this.idCounter = counter;
     }
 
-    public  List<Task> getPrioritizedTasks(){
+    public List<Task> getPrioritizedTasks() {
         return new ArrayList<>(prioritizedTasks);
     }
 
     private void deleteTask(int id) {
         historyManager.remove(id);
-        tasks.remove(id);
         prioritizedTasks.remove(tasks.get(id));
+        tasks.remove(id);
     }
 
     private void deleteSubTask(int id) {
@@ -195,7 +196,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     private void addNewTask(Task newTask) {
         tasks.put(newTask.getId(), newTask);
-        if(newTask.getStartTime().isPresent()){
+        if (newTask.getStartTime().isPresent()) {
             prioritizedTasks.add(newTask);
         }
     }
@@ -204,7 +205,7 @@ public class InMemoryTaskManager implements TaskManager {
         subTasks.put(newSubTask.getId(), newSubTask);
         epics.get(newSubTask.getParentEpicId()).addSubTaskToEpic(newSubTask);
         checkEpicStatusIsChanged(newSubTask.getParentEpicId());
-        if(newSubTask.getStartTime().isPresent()){
+        if (newSubTask.getStartTime().isPresent()) {
             prioritizedTasks.add(newSubTask);
         }
 
@@ -217,6 +218,28 @@ public class InMemoryTaskManager implements TaskManager {
     private void checkEpicStatusIsChanged(int epicId) {
         Epic epic = epics.get(epicId);
         epic.checkEpicState();
+    }
+
+    private boolean isOverlap(Task task1, Task task2) {
+        if (task1.getStartTime().isEmpty() || task2.getStartTime().isEmpty()) return false;
+        LocalDateTime start1 = task1.getStartTime().get();
+        LocalDateTime end1 = task1.getEndTime();
+        LocalDateTime start2 = task2.getStartTime().get();
+        LocalDateTime end2 = task1.getEndTime();
+
+        if (start1.isBefore(start2) && end1.isBefore(start2)) {
+            return false;
+        } else if (start2.isBefore(start1) && end2.isBefore(start1)) {
+            return false;
+        } else return true;
+    }
+
+    private boolean hasTimeConflict(Task task) {
+        List<Task> prioritizedTasks = getPrioritizedTasks();
+        if (prioritizedTasks.isEmpty()) return false;
+        return prioritizedTasks
+                .stream()
+                .anyMatch(task1 -> isOverlap(task1, task));
     }
 
 }

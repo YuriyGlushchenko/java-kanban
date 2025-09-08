@@ -40,19 +40,19 @@ class FileBackedTaskManagerTest {
         testFile = Files.createTempFile(tempDir, "test", ".csv").toFile();
         manager = new FileBackedTaskManager(testFile);
         task1 = new Task("Простая задача1", "Описание простой задачи 1");
-        task1Id = manager.addAnyTypeTask(task1);
+        task1Id = manager.addNewTask(task1);
         task2 = new Task("Простая задача2", "Описание простой задачи 2");
-        task2Id = manager.addAnyTypeTask(task2);
+        task2Id = manager.addNewTask(task2);
 
         epic1 = new Epic("Важный эпик1", "Описание эпика 1");
         epic2 = new Epic("Важный эпик2", "Описание эпика 2");
-        epic1Id = manager.addAnyTypeTask(epic1);
-        epic2Id = manager.addAnyTypeTask(epic2);
+        epic1Id = manager.addNewEpic(epic1);
+        epic2Id = manager.addNewEpic(epic2);
 
         subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1Id);
-        subTask1Id = manager.addAnyTypeTask(subTask1);
+        subTask1Id = manager.addNewSubTask(subTask1);
         subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1Id);
-        subTask2Id = manager.addAnyTypeTask(subTask2);
+        subTask2Id = manager.addNewSubTask(subTask2);
     }
 
     @Test
@@ -125,7 +125,7 @@ class FileBackedTaskManagerTest {
         assertEquals(2, manager.getAllTasks().size());
 
         // Удаляем одну задачу
-        manager.deleteAnyTypeTask(task1Id);
+        manager.deleteTask(task1Id);
 
         // Загружаем из файла
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(testFile);
@@ -151,7 +151,7 @@ class FileBackedTaskManagerTest {
 
         // Проверяем, что counter у loadedManager установлен корректно (максимальный id = 10)
         Task newTask = new Task("New Task", "New Description");
-        int newId = loadedManager.addAnyTypeTask(newTask);
+        int newId = loadedManager.addNewTask(newTask);
 
         assertEquals(11, newId, "Новый ID должен быть на 1 больше максимального из файла");
     }
@@ -165,7 +165,7 @@ class FileBackedTaskManagerTest {
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(testFile);
 
         Task newTask = new Task("New Task", "New Description");
-        int newId = loadedManager.addAnyTypeTask(newTask);
+        int newId = loadedManager.addNewTask(newTask);
 
         assertEquals(1, newId, "При пустом файле counter должен начинаться с 1");
     }

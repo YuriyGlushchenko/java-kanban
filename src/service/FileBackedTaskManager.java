@@ -1,10 +1,7 @@
 package service;
 
 import exeptions.ManagerSaveException;
-import model.Epic;
-import model.Status;
-import model.SubTask;
-import model.Task;
+import model.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,23 +24,25 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     public static void main(String[] args) {
         FileBackedTaskManager manager = new FileBackedTaskManager(new File("src/data.csv"));
         Task task1 = new Task("Простая задача1", "Описание простой задачи 1111");
-        int task1Id = manager.addAnyTypeTask(task1);
+        int task1Id = manager.addNewTask(task1);
         Task task2 = new Task("Простая задача2", "Описание простой задачи 2122");
-        int task2Id = manager.addAnyTypeTask(task2);
+        int task2Id = manager.addNewTask(task2);
         Epic epic1 = new Epic("Важный эпик1", "Описание эпика 1");
         Epic epic2 = new Epic("Важный эпик2", "Описание эпика 2");
-        int epic1Id = manager.addAnyTypeTask(epic1);
-        int epic2Id = manager.addAnyTypeTask(epic2);
+        int epic1Id = manager.addNewEpic(epic1);
+        int epic2Id = manager.addNewEpic(epic2);
 
         SubTask subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1Id);
-        int subTask1Id = manager.addAnyTypeTask(subTask1);
+        int subTask1Id = manager.addNewSubTask(subTask1);
         SubTask subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1Id);
-        int subTask2Id = manager.addAnyTypeTask(subTask2);
+        int subTask2Id = manager.addNewSubTask(subTask2);
         subTask1.setStatus(Status.DONE);
-        manager.updateTask(subTask1);
+        manager.updateSubTask(subTask1);
 
-        FileBackedTaskManager manager2 = loadFromFile(new File("src/data.csv"));
-        manager2.getAllTypesTask().forEach(System.out::println);
+        FileBackedTaskManager loadedManager = loadFromFile(new File("src/data.csv"));
+        loadedManager.getAllTasks().forEach(System.out::println);
+        loadedManager.getAllSubTasks().forEach(System.out::println);
+        loadedManager.getAllEpics().forEach(System.out::println);
     }
 
 //    @Override
@@ -52,24 +51,31 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 //        save();
 //    }
 
-    @Override
-    public int addAnyTypeTask(Task newTask) {
-        int id = super.addAnyTypeTask(newTask);
-        save();
-        return id;
-    }
+//    @Override
+//    public int addAnyTypeTask(Task newTask) {
+//        int id = super.addAnyTypeTask(newTask);
+//        save();
+//        return id;
+//    }
 
-    @Override
-    public void updateTask(Task task) {
-        super.updateTask(task);
-        save();
-    }
 
-    @Override
-    public void deleteAnyTypeTask(int id) {
-        super.deleteAnyTypeTask(id);
-        save();
-    }
+
+
+
+
+
+
+//    @Override
+//    public void updateAnyTypeTask(Task task) {
+//        super.updateAnyTypeTask(task);
+//        save();
+//    }
+
+//    @Override
+//    public void deleteAnyTypeTask(int id) {
+//        super.deleteAnyTypeTask(id);
+//        save();
+//    }
 
     @Override
     public void deleteAllSubTasks() {
@@ -86,6 +92,67 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     @Override
     public void deleteAllTasks() {
         super.deleteAllTasks();
+        save();
+    }
+
+    @Override
+    public void deleteTask(int id) {
+        super.deleteTask(id);
+        save();
+    }
+
+    @Override
+    public void deleteSubTask(int id) {
+        super.deleteSubTask(id);
+        save();
+    }
+
+    @Override
+    public void deleteEpic(int id) {
+        super.deleteEpic(id);
+        save();
+    }
+
+    @Override
+    public int addNewTask(Task newTask) {
+        int newTaskId = super.addNewTask(newTask);
+        save();
+        return newTaskId;
+    }
+
+    @Override
+    public int addNewSubTask(SubTask newSubTask) {
+        int newSubTaskId = super.addNewSubTask(newSubTask);
+        save();
+        return newSubTaskId;
+    }
+
+    @Override
+    public int addNewEpic(Epic newEpic) {
+        int newEpicId = super.addNewEpic(newEpic);
+        save();
+        return newEpicId;
+    }
+
+    //            }
+    //            case EPIC -> updateEpic((Epic) task);
+    //        }
+    //    }
+    @Override
+    public void updateTask(Task task) {
+        super.updateTask(task);
+        save();
+    }
+
+    @Override
+    public void updateSubTask(SubTask subTask) {
+        super.updateSubTask(subTask);
+        save();
+    }
+
+    @Override
+    public void updateEpic(Epic epic) {
+        super.updateEpic(epic);
         save();
     }
 
@@ -144,7 +211,16 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     private void restoreTask(Task task) {
-        super.addAnyTypeTask(task);
+        Type taskType = task.getType();
+        switch (taskType){
+            case TASK -> super.addNewTask(task);
+            case SUBTASK -> super.addNewSubTask((SubTask) task);
+            case EPIC -> super.addNewEpic((Epic) task);
+        }
+    }
+
+    public void setCounter(int counter) {
+        this.idCounter = counter;
     }
 
 

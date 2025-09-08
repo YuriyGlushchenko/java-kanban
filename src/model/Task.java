@@ -6,7 +6,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class Task implements Comparable<Task> {
-    protected Type type;
     private int id = -1;
     private String title;
     private Status status = Status.NEW;

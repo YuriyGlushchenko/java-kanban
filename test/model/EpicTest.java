@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 
 class EpicTest {
-    private static TaskManager manager;
+    private static InMemoryTaskManager manager;
     private static Epic epic1;
     private static Epic epic2;
     private static int epic1Id;
@@ -31,13 +31,13 @@ class EpicTest {
         // Создаём 2 эпика. У первого будет 2 подзадачи. Второй пустой.
         epic1 = new Epic("Важный эпик1", "описние эпика 1");
         epic2 = new Epic("Важный эпик2", "описние эпика 2");
-        epic1Id = manager.addAnyTypeTask(epic1);
-        epic2Id = manager.addAnyTypeTask(epic2);
+        epic1Id = manager.addNewEpic(epic1);
+        epic2Id = manager.addNewEpic(epic2);
 
         subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1Id);
-        subTask1Id = manager.addAnyTypeTask(subTask1);
+        subTask1Id = manager.addNewSubTask(subTask1);
         subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1Id);
-        subTask2Id = manager.addAnyTypeTask(subTask2);
+        subTask2Id = manager.addNewSubTask(subTask2);
     }
 
     @Test
@@ -59,7 +59,7 @@ class EpicTest {
     @Test
     public void shouldBeEpicStatusIN_PROGRESSWhenSubTaskIsIN_PROGRESS() {
         subTask1.setStatus(Status.IN_PROGRESS);
-        manager.updateTask(subTask1);
+        manager.updateSubTask(subTask1);
         assertEquals(Status.IN_PROGRESS, epic1.getStatus());
     }
 
@@ -67,8 +67,8 @@ class EpicTest {
     public void shouldBeEpicStatusDONEWhenAllSubTaskIsDONE() {
         subTask1.setStatus(Status.DONE);
         subTask2.setStatus(Status.DONE);
-        manager.updateTask(subTask1);
-        manager.updateTask(subTask2);
+        manager.updateSubTask(subTask1);
+        manager.updateSubTask(subTask2);
         assertEquals(Status.DONE, epic1.getStatus());
     }
 
@@ -138,7 +138,7 @@ class EpicTest {
     @Test
     void evaluateStartTime_shouldReturnEmptyOptionalWhenNoSubTasks() {
         Epic epic = new Epic("Test Epic", "Test Description");
-        manager.addAnyTypeTask(epic);
+        manager.addNewEpic(epic);
         epic.checkEpicState();  // тест через публичный метод, внутри вызывается evaluateStartTime()
 
         assertTrue(epic.getStartTime().isEmpty());

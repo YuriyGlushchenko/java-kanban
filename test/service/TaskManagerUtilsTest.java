@@ -57,7 +57,7 @@ class TaskManagerUtilsTest {
     @Test
     public void ShouldCorrectlyConverTaskToString() {
         task1.setDuration(Duration.ofMinutes(50));
-        task1.setStartTime(LocalDateTime.of(2025,9,7,20,0));
+        task1.setStartTime(LocalDateTime.of(2025, 9, 7, 20, 0));
         String convertedTask = TaskManagerUtils.convertToString(task1);
         String expected = String.format("%d,TASK,Простая задача1,NEW,Описание простой задачи 1,50,07.09.2025 20:00,", task1Id);
         assertEquals(expected, convertedTask, "Конвертация проходит неправильно");

@@ -314,4 +314,19 @@ abstract class TaskManagerTest<T extends TaskManager> {
         assertEquals(2, historyAfter.size(), "В истории должно быть 2 задач после удаления");
         assertTrue(historyAfter.stream().allMatch(t -> t.getType() == Type.TASK), "Задача должна остаться в истории");
     }
+
+    @Test
+    void testSubTaskHasValidEpic() {
+        // Проверяем, что у подзадачи есть валидный родительский эпик
+        assertDoesNotThrow(() -> manager.getEpicById(subTask1.getParentEpicId()));
+        assertEquals(epic1.getId(), subTask1.getParentEpicId());
+    }
+
+    @Test
+    void testAddSubTaskToNonExistentEpic() {
+        // Попытка добавить подзадачу к несуществующему эпику
+        SubTask invalidSubTask = new SubTask("Invalid SubTask", "Description", 999);
+
+        assertThrows(Exception.class, () -> manager.addNewSubTask(invalidSubTask));
+    }
 }

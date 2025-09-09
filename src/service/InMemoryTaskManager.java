@@ -115,7 +115,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void deleteTask(int id) {
         historyManager.remove(id);
         Task taskToDelete = tasks.get(id);
-        if(taskToDelete != null){
+        if (taskToDelete != null) {
             prioritizedTasks.remove(tasks.get(id));
             tasks.remove(id);
         }
@@ -125,7 +125,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void deleteSubTask(int id) {
         historyManager.remove(id);
         SubTask subTaskToDelete = subTasks.get(id);
-        if(subTaskToDelete != null){
+        if (subTaskToDelete != null) {
             Epic parentEpic = epics.get(subTaskToDelete.getParentEpicId());
             parentEpic.deleteSubTaskFromEpic(subTaskToDelete.getId());
             prioritizedTasks.remove(subTaskToDelete);
@@ -138,7 +138,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void deleteEpic(int id) {
         historyManager.remove(id);
         Epic epicToDelete = epics.get(id);
-        if(epicToDelete != null){
+        if (epicToDelete != null) {
             for (SubTask subTask : epicToDelete.getEpicSubTasks()) {
                 historyManager.remove(subTask.getId());
                 subTasks.remove(subTask.getId());
@@ -160,7 +160,7 @@ public class InMemoryTaskManager implements TaskManager {
         return new ArrayList<>(prioritizedTasks);
     }
 
-    private void setIdToTask(Task task){
+    private void setIdToTask(Task task) {
         if (task.getId() == -1) {
             int newItemId = ++idCounter;
             task.setId(newItemId);
@@ -169,7 +169,8 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public int addNewTask(Task newTask) {
-        if (hasTimeConflict(newTask)) throw new TimeIntersectionException("Задача не добавлена: пересечение по времени");
+        if (hasTimeConflict(newTask))
+            throw new TimeIntersectionException("Задача не добавлена: пересечение по времени");
         setIdToTask(newTask);
         tasks.put(newTask.getId(), newTask);
         if (newTask.getStartTime().isPresent()) {
@@ -180,7 +181,8 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public int addNewSubTask(SubTask newSubTask) {
-        if (hasTimeConflict(newSubTask)) throw new TimeIntersectionException("Задача не добавлена: пересечение по времени");
+        if (hasTimeConflict(newSubTask))
+            throw new TimeIntersectionException("Задача не добавлена: пересечение по времени");
         setIdToTask(newSubTask);
         subTasks.put(newSubTask.getId(), newSubTask);
         epics.get(newSubTask.getParentEpicId()).addSubTaskToEpic(newSubTask);
@@ -208,11 +210,13 @@ public class InMemoryTaskManager implements TaskManager {
         LocalDateTime start1 = task1.getStartTime().get();
         LocalDateTime end1 = task1.getEndTime();
         LocalDateTime start2 = task2.getStartTime().get();
-        LocalDateTime end2 = task1.getEndTime();
+        LocalDateTime end2 = task2.getEndTime();
 
-        if (start1.isBefore(start2) && end1.isBefore(start2)) {
+        if (start1.isBefore(start2) && (end1.isBefore(start2) || end1.isEqual(start2))) {
             return false;
-        } else if (start2.isBefore(start1) && end2.isBefore(start1)) {
+        } else if (start2.isBefore(start1) && (end2.isBefore(start1) || end2.isEqual(start1))) {
+            return false;
+        } else if (start1.isEqual(start2) && task1.getDuration().isZero() && task2.getDuration().isZero()) {
             return false;
         } else return true;
     }

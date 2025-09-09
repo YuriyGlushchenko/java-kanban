@@ -1,333 +1,249 @@
 package service;
 
+import exeptions.TimeIntersectionException;
+import model.Epic;
+import model.SubTask;
 import model.Task;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
-//    private static TaskManager manager;
-//    private static Task task1;
-//    private static int task1Id;
-//    private static Task task2;
-//    private static int task2Id;
-//
-//    private static Epic epic1;
-//    private static Epic epic2;
-//    private static int epic1Id;
-//    private static int epic2Id;
-//
-//    private static SubTask subTask1;
-//    private static SubTask subTask2;
-//    private static int subTask1Id;
-//    private static int subTask2Id;
-
+    private Task taskA;
+    private Task taskB;
 
     @Override
     protected InMemoryTaskManager getManager() {
         return new InMemoryTaskManager();
     }
 
-    //    @BeforeEach
-//    public void beforeEach() {
-//        manager = new InMemoryTaskManager();
-//        task1 = new Task("Простая задача1", "Описание простой задачи 1");
-//        task1Id = manager.addAnyTypeTask(task1);
-//        task2 = new Task("Простая задача2", "Описание простой задачи 2");
-//        task2Id = manager.addAnyTypeTask(task2);
-//
-//        epic1 = new Epic("Важный эпик1", "Описание эпика 1");
-//        epic2 = new Epic("Важный эпик2", "Описание эпика 2");
-//        epic1Id = manager.addAnyTypeTask(epic1);
-//        epic2Id = manager.addAnyTypeTask(epic2);
-//
-//        subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1Id);
-//        subTask1Id = manager.addAnyTypeTask(subTask1);
-//        subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1Id);
-//        subTask2Id = manager.addAnyTypeTask(subTask2);
-//    }
-//
-//    @Test
-//    public void shouldFindTask2ByTask2Id() {
-//        assertEquals(task2, manager.getAnyTypeTaskById(task2Id));
-//    }
-//
-//    @Test
-//    public void shouldFindEpic1ByEpic1Id() {
-//        assertEquals(epic1, manager.getAnyTypeTaskById(epic1Id));
-//    }
-//
-//    @Test
-//    public void shouldFindSubTask1BySubTask1Id() {
-//        assertEquals(subTask1, manager.getAnyTypeTaskById(subTask1Id));
-//    }
-//
-//    @Test
-//    public void shouldReturnEmptyHistoryListOnNewTasks() {
-//        System.out.println(manager.getHistory());
-//        assertTrue(manager.getHistory().isEmpty());
-//    }
-//
-//    @Test
-//    public void shouldReturnCorrectSizeOfHistoryListAfterTaskView() {
-//        manager.getAnyTypeTaskById(epic1Id);
-//        manager.getAnyTypeTaskById(task2Id);
-//        manager.getAnyTypeTaskById(task1Id);
-//        assertEquals(3, manager.getHistory().size());
-//    }
-//
-//    @Test
-//    public void shouldReturnTaskInHistoryListAfterTaskView() {
-//        manager.getAnyTypeTaskById(epic1Id);
-//        LinkedList<Task> expectedList = new LinkedList<>();
-//        expectedList.add(epic1);
-//        assertIterableEquals(expectedList, manager.getHistory());
-//    }
-//
-//    @Test
-//    public void ShouldBeTheSameTaskIfIDsMatch() {
-//        Task savedTask = manager.getAnyTypeTaskById(task1Id);
-//        assertNotNull(savedTask, "Задача не найдена.");
-//        assertEquals(task1, savedTask, "Задачи не совпадают.");
-//    }
-//
-//    @Test
-//    public void ShouldBeTheSameEpicIfIDsMatch() {
-//        Task savedEpic = manager.getAnyTypeTaskById(epic1Id);
-//        assertNotNull(savedEpic, "Задача не найдена.");
-//        assertEquals(epic1, savedEpic, "Задачи не совпадают.");
-//    }
-//
-//    @Test
-//    public void ShouldBeTheSameSubTaskIfIDsMatch() {
-//        Task savedSubTask = manager.getAnyTypeTaskById(subTask1Id);
-//        assertNotNull(savedSubTask, "Задача не найдена.");
-//        assertEquals(subTask1, savedSubTask, "Задачи не совпадают.");
-//    }
-//
-//    @Test
-//    public void askShouldRemainUnmodifiedAfterAddingToManager() {
-//        String title = "title";
-//        String description = "description";
-//        Task newTask = new Task(title, description);
-//        int id = manager.addAnyTypeTask(newTask);
-//
-//        assertEquals(title, manager.getAnyTypeTaskById(id).getTitle());
-//        assertEquals(description, manager.getAnyTypeTaskById(id).getDescription());
-//    }
-//
-//    @Test
-//    public void shouldCleanAll() {
-//        assertEquals(2, manager.getAllTasks().size());
-//        assertEquals(2, manager.getAllEpics().size());
-//        assertEquals(2, manager.getAllSubTasks().size());
-//        assertEquals(6, manager.getAllTypesTask().size());
-//
-//        manager.deleteAllEpics();
-//        manager.deleteAllTasks();
-//        manager.deleteAllSubTasks();
-//
-//        assertTrue(manager.getAllTasks().isEmpty());
-//        assertTrue(manager.getAllEpics().isEmpty());
-//        assertTrue(manager.getAllSubTasks().isEmpty());
-//        assertTrue(manager.getAllTypesTask().isEmpty());
-//    }
-//
-//    @Test
-//    void getTaskByIdShouldReturnTask() {
-//        Task actualTask = manager.getTaskById(task1Id);
-//        assertEquals(task1, actualTask, "Метод вернул не ту задачу");
-//    }
-//
-//    @Test
-//    void getTaskByIdShouldThrowWhenTaskDoesNotExist() {
-//        assertThrows(
-//                NoSuchElementException.class,
-//                () -> manager.getTaskById(-11),
-//                "Метод должен кидать NoSuchElementException, если задача не найдена"
-//        );
-//    }
-//
-//    @Test
-//    void getEpicByIdShouldReturnEpic() {
-//        Epic actualEpic = manager.getEpicById(epic1Id);
-//        assertEquals(epic1, actualEpic, "Метод вернул не ту задачу");
-//    }
-//
-//    @Test
-//    void getEpicByIdShouldThrowWhenTaskDoesNotExist() {
-//        assertThrows(
-//                NoSuchElementException.class,
-//                () -> manager.getEpicById(-11),
-//                "Метод должен кидать NoSuchElementException, если задача не найдена"
-//        );
-//    }
-//
-//    @Test
-//    void getSubTaskByIdShouldReturnSubTask() {
-//        SubTask actualSubTask = manager.getSubTaskById(subTask1Id);
-//        assertEquals(subTask1, actualSubTask, "Метод вернул не ту задачу");
-//    }
-//
-//    @Test
-//    void getSubTaskByIdShouldThrowWhenTaskDoesNotExist() {
-//        assertThrows(
-//                NoSuchElementException.class,
-//                () -> manager.getSubTaskById(-11),
-//                "Метод должен кидать NoSuchElementException, если задача не найдена"
-//        );
-//    }
-//
-//    @Test
-//    void testNoStaleSubTaskIdsInEpicAfterDeletion() {
-//        assertEquals(List.of(subTask1, subTask2), manager.getEpicSubTasks(epic1Id));
-//        manager.deleteAnyTypeTask(subTask1Id);
-//        manager.deleteAnyTypeTask(subTask2Id);
-//
-//        assertFalse(epic1.getEpicSubTasks().stream() //Внутри эпиков не должно оставаться неактуальных id подзадач.
-//                .anyMatch(subTask -> (subTask.getId() == subTask1Id) || (subTask.getId() == subTask2Id)));
-//    }
-//
-//    @Test
-//    void shouldBeEmptyHistoryAtTheBeginning() {
-//        assertTrue(manager.getHistory().isEmpty(), "История должна быть пустой до просмотра задач");
-//    }
-//
-//
-//    @Test
-//    void shouldRemoveTaskFromHistoryWhenTaskDeleted() {
-//        assertTrue(manager.getHistory().isEmpty(), "История должна быть пустой до просмотра задач");
-//
-//        manager.getTaskById(task1Id); // просматриваем одну задачу
-//        assertEquals(List.of(task1), manager.getHistory(), "В истории должна быть одна просмотренная задача");
-//
-//        manager.deleteAnyTypeTask(task1Id); // удаляем задачу
-//        assertTrue(manager.getHistory().isEmpty(), "Задача должна удалиться и из истории при удалении задачи");
-//    }
-//
-//    @Test
-//    void shouldRemoveAllSubTasksFromHistoryWhenEpicDeleted() {
-//        assertTrue(manager.getHistory().isEmpty(), "История должна быть пустой до просмотра задач");
-//
-//        manager.getEpicById(epic1Id); // просматриваем эпик
-//        manager.getSubTaskById(subTask1Id); // просматриваем подзадачу эпика
-//        manager.getSubTaskById(subTask2Id); // просматриваем вторую подзадачу эпика
-//        manager.getTaskById(task1Id); // просматриваем просто задачу
-//        assertEquals(
-//                List.of(epic1, subTask1, subTask2, task1),
-//                manager.getHistory(),
-//                "В истории должны быть просмотренные задачи"
-//        );
-//
-//        manager.deleteAnyTypeTask(epic1Id); // удаляем эпик
-//
-//        assertEquals(
-//                List.of(task1),
-//                manager.getHistory(),
-//                "Подзадачи должны удалиться из истории при удалении Epic, другие задачи остаться"
-//        );
-//    }
-//
-//    @Test
-//    void deleteAllSubTasks_shouldRemoveAllSubTasksAndUpdateEpics() {
-//        SubTask subTask3 = new SubTask("SubTask 3", "Description", epic2Id);
-//        manager.addAnyTypeTask(subTask3);
-//
-//        manager.deleteAllSubTasks();
-//
-//        assertTrue(manager.getAllSubTasks().isEmpty());
-//        assertTrue(manager.getEpicSubTasks(epic1Id).isEmpty());
-//        assertTrue(manager.getEpicSubTasks(epic2Id).isEmpty());
-//    }
-//
-//    @Test
-//    void deleteAllEpics_shouldRemoveAllEpicsAndTheirSubTasks() {
-//        manager.deleteAllEpics();
-//
-//        assertTrue(manager.getAllEpics().isEmpty());
-//        assertTrue(manager.getAllSubTasks().isEmpty());
-//    }
-//
-//    @Test
-//    void deleteAllTasks_shouldRemoveAllTasks() {
-//        assertEquals(2, manager.getAllTasks().size());
-//        manager.deleteAllTasks();
-//
-//        assertTrue(manager.getAllTasks().isEmpty());
-//    }
-//
-//    @Test
-//    void deleteAllTasks_shouldNotAffectEpicsAndSubTasks() {
-//        manager.deleteAllTasks();
-//
-//        assertTrue(manager.getAllTasks().isEmpty());
-//        assertEquals(2, manager.getAllEpics().size());
-//        assertEquals(2, manager.getAllSubTasks().size());
-//    }
-//
-//    @Test
-//    void deleteNonExistentTask_shouldThrowException() {
-//        // Act & Assert
-//        assertThrows(NoSuchElementException.class, () -> manager.deleteAnyTypeTask(999));
-//    }
-//
-//    @Test
-//    void deleteAllSubTasks_shouldRemoveSubTasksFromHistory() {
-//        manager.getSubTaskById(subTask1Id);
-//        manager.getSubTaskById(subTask2Id);
-//        manager.getEpicById(epic1Id); // Эпик тоже в истории
-//
-//        // Проверяем, что подзадачи в истории
-//        List<Task> historyBefore = manager.getHistory();
-//        assertEquals(3, historyBefore.size(), "В истории должно быть 3 задачи перед удалением");
-//
-//        // Удаляем все подзадачи
-//        manager.deleteAllSubTasks();
-//
-//        // Проверяем, что подзадачи удалены из истории, но эпик остался
-//        List<Task> historyAfter = manager.getHistory();
-//        assertEquals(1, historyAfter.size(), "В истории должен остаться только эпик");
-//        assertEquals(epic1Id, historyAfter.get(0).getId(), "В истории должен остаться эпик");
-//    }
-//
-//    @Test
-//    void deleteAllEpics_shouldRemoveEpicsAndSubTasksFromHistory() {
-//        // Добавляем все задачи в историю
-//        manager.getEpicById(epic1Id);
-//        manager.getEpicById(epic2Id);
-//        manager.getSubTaskById(subTask2Id);
-//        manager.getSubTaskById(subTask1Id);
-//        manager.getTaskById(task1Id);
-//        manager.getTaskById(task2Id);
-//
-//        // Проверяем, что все задачи в истории
-//        List<Task> historyBefore = manager.getHistory();
-//        assertEquals(6, historyBefore.size(), "В истории должно быть 6 задач перед удалением");
-//
-//        // Удаляем все эпики
-//        manager.deleteAllEpics();
-//
-//        // Проверяем, что эпики и подзадачи удалены из истории
-//        List<Task> historyAfter = manager.getHistory();
-//        assertEquals(2, historyAfter.size(), "В истории должно быть 2 задач после удаления");
-//        assertTrue(historyAfter.stream().allMatch(t -> t.getType() == Type.TASK), "Задача должна остаться в истории");
-//    }
+    @BeforeEach
+    public void beforeEachInMemoryTaskManager() {
+        taskA = new Task("Task 1", "Description 1");
+        taskB = new Task("Task 2", "Description 2");
+
+        task1.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0));
+        task1.setDuration(Duration.ofHours(1));
+
+        task2.setStartTime(LocalDateTime.of(2023, 1, 1, 11, 0));
+        task2.setDuration(Duration.ofHours(1));
+
+        subTask1.setStartTime(LocalDateTime.of(2023, 1, 1, 9, 0));
+        subTask1.setDuration(Duration.ofHours(1));
+
+        subTask2.setStartTime(LocalDateTime.of(2023, 1, 1, 13, 0));
+        subTask2.setDuration(Duration.ofHours(2));
+    }
+
     @Test
-    void shouldDetectPartialOverlapAtStart() {
-        Task taskA = new Task("Task 1", "Description 1");
+    void isOverlap_shouldReturnTrueWhenPartialOverlap() {
         taskA.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0));
         taskA.setDuration(Duration.ofMinutes(30));
 
-        Task taskB = new Task("Task 2", "Description 2");
         taskB.setStartTime(LocalDateTime.of(2023, 1, 1, 9, 45));
         taskB.setDuration(Duration.ofMinutes(30));
 
         assertTrue(manager.isOverlap(taskA, taskB),
-                "Должно быть пересечение при частичном пересечении в начале");
+                "Должно быть пересечение при частичном пересечении");
+        assertTrue(manager.isOverlap(taskB, taskA),
+                "Должно быть пересечение при частичном пересечении");
+    }
+
+    @Test
+    void isOverlap_shouldReturnFalseWhenEitherTaskHasNoTime() {
+        Task taskWithTime = new Task("Task 1", "Description 1");
+        taskWithTime.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0));
+        taskWithTime.setDuration(Duration.ofMinutes(30));
+
+        assertFalse(manager.isOverlap(taskWithTime, taskA),
+                "Не должно быть пересечения, если у второй задачи нет времени");
+
+        assertFalse(manager.isOverlap(taskA, taskWithTime),
+                "Не должно быть пересечения, если у первой задачи нет времени");
+
+        assertFalse(manager.isOverlap(taskA, taskB),
+                "Не должно быть пересечения, если у обеих задач нет времени");
+    }
+
+    @Test
+    void isOverlap_shouldReturnTrueWhenTimeExactOverlap() {
+        // Обе задачи: 10:00-10:30
+        taskA.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0));
+        taskA.setDuration(Duration.ofMinutes(30));
+
+        taskB.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0));
+        taskB.setDuration(Duration.ofMinutes(30));
+
+        assertTrue(manager.isOverlap(taskA, taskB),
+                "Должно быть пересечение при точном совпадении времени");
+    }
+
+    @Test
+    void isOverlap_shouldReturnTrueWhenTaskCompletelyInsideAnother() {
+        taskA.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0));
+        taskA.setDuration(Duration.ofMinutes(60));
+
+        taskB.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 10));
+        taskB.setDuration(Duration.ofMinutes(30));
+
+        assertTrue(manager.isOverlap(taskA, taskB),
+                "Должно быть пересечение когда одна задача полностью внутри другой по времени");
+        assertTrue(manager.isOverlap(taskB, taskA),
+                "Должно быть пересечение когда одна задача полностью внутри другой по времени");
+    }
+
+    @Test
+    void isOverlap_shouldReturnTrueWhenWhenTasksAreSeparate() {
+        taskA.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0));
+        taskA.setDuration(Duration.ofMinutes(60));
+
+        taskB.setStartTime(LocalDateTime.of(2023, 1, 1, 11, 0));
+        taskB.setDuration(Duration.ofMinutes(30));
+
+        assertFalse(manager.isOverlap(taskA, taskB),
+                "Не должно быть пересечения, когда одна задача идет за другой");
+        assertFalse(manager.isOverlap(taskB, taskA),
+                "Не должно быть пересечения, когда одна задача идет за другой");
+    }
+
+    @Test
+    void isOverlap_shouldReturnFalseWhenTasksAreOnDifferentDays() {
+        taskA.setStartTime(LocalDateTime.of(2023, 1, 5, 10, 0));
+        taskA.setDuration(Duration.ofMinutes(30));
+
+        taskB.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0));
+        taskB.setDuration(Duration.ofMinutes(30));
+
+        assertFalse(manager.isOverlap(taskA, taskB),
+                "Не должно быть пересечения при задачах в разные дни");
+        assertFalse(manager.isOverlap(taskB, taskA),
+                "Не должно быть пересечения при задачах в разные дни");
+    }
+
+    @Test
+    void isOverlap_shouldReturnTrueWhenTasksAreOnDifferentDaysButWithLongDuration() {
+        taskA.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0));
+        taskA.setDuration(Duration.ofHours(25));
+
+        taskB.setStartTime(LocalDateTime.of(2023, 1, 2, 10, 0));
+        taskB.setDuration(Duration.ofMinutes(30));
+
+        assertTrue(manager.isOverlap(taskA, taskB),
+                "Должно быть пересечение при задачах в разные дни но с большой длительностью");
+        assertTrue(manager.isOverlap(taskB, taskA),
+                "Должно быть пересечение при задачах в разные дни но с большой длительностью");
+    }
+
+    @Test
+    void isOverlap_shouldReturnFalseWhenTasksAreOnSameTimeWithZeroDuration() {
+        taskA.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0)); //Duration = 0
+
+        taskB.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0)); //Duration = 0
+
+        assertFalse(manager.isOverlap(taskA, taskB),
+                "Не должно быть пересечения при задачах в разные дни");
+        assertFalse(manager.isOverlap(taskB, taskA),
+                "Не должно быть пересечения при задачах в разные дни");
+    }
+
+    @Test
+    void GetPrioritizedTasks_ShouldReturnTasksInCorrectOrder() {
+        // Добавляем задачи
+        manager.addNewTask(taskA); // задача без времени
+        manager.updateTask(task1);
+        manager.updateTask(task2);
+
+        List<Task> prioritizedTasks = manager.getPrioritizedTasks();
+
+        assertEquals(2, prioritizedTasks.size(), "Должно быть 2 приоритетных задачи");
+        assertEquals(task1, prioritizedTasks.get(0), "Первая задача должна быть task1 (раньше по времени)");
+        assertEquals(task2, prioritizedTasks.get(1), "Вторая задача должна быть task2");
+    }
+
+    @Test
+    void GetPrioritizedTasks_ShouldReturnSubTasksInCorrectOrder() {
+        manager.updateSubTask(subTask1);
+        manager.updateSubTask(subTask2);
+
+        List<Task> prioritizedTasks = manager.getPrioritizedTasks();
+
+        assertEquals(2, prioritizedTasks.size(), "Должно быть 2 приоритетных подзадачи");
+        assertEquals(subTask1, prioritizedTasks.get(0), "Первая подзадача должна быть subTask1 (раньше по времени)");
+        assertEquals(subTask2, prioritizedTasks.get(1), "Вторая подзадача должна быть subTask2");
+    }
+
+    @Test
+    void GetPrioritizedTasks_ShouldReturnMixedTasksInCorrectOrder() {
+        manager.addNewTask(taskA); // задача без времени
+        manager.updateTask(task1);
+        manager.updateTask(task2);
+        manager.updateSubTask(subTask1);
+        manager.updateSubTask(subTask2);
+
+        List<Task> prioritizedTasks = manager.getPrioritizedTasks();
+
+        assertEquals(4, prioritizedTasks.size(), "Должно быть 4 приоритетных задачи");
+
+        assertEquals(subTask1, prioritizedTasks.get(0)); // 9:00
+        assertEquals(task1, prioritizedTasks.get(1));    // 10:00
+        assertEquals(task2, prioritizedTasks.get(2));    // 11:00
+        assertEquals(subTask2, prioritizedTasks.get(3)); // 13:00
+    }
+
+    @Test
+    void GetPrioritizedTasks_ShouldReturnCorrectTasksWhenDeleteTaskAndSubTask() {
+        manager.updateTask(task1);
+        manager.updateTask(task2);
+        manager.updateSubTask(subTask1);
+        manager.updateSubTask(subTask2);
+
+        manager.deleteTask(task1Id);
+        manager.deleteSubTask(subTask1Id);
+
+        List<Task> prioritizedTasks = manager.getPrioritizedTasks();
+
+        assertEquals(2, prioritizedTasks.size(), "Должна остаться 3 приоритетная задача");
+        assertTrue(prioritizedTasks.contains(task2), "Оставшаяся задача должна быть task2");
+        assertTrue(prioritizedTasks.contains(subTask2), "Оставшаяся задача должна быть task2");
+    }
+
+    @Test
+    void HasTimeConflict_ShouldReturnTrueWhenTimeWithConflict() {
+        manager.updateTask(task1);
+        manager.updateTask(task2);
+        manager.updateSubTask(subTask1);
+        manager.updateSubTask(subTask2);
+
+        // Создаем задачу, которая пересекается по времени
+        Task conflictingTask = new Task("Conflict", "Description");
+        conflictingTask.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 30)); // Начинается во время выполнения task1
+        conflictingTask.setDuration(Duration.ofHours(1));
+
+        assertTrue(manager.hasTimeConflict(conflictingTask), "Должен быть конфликт времени");
+    }
+
+    @Test
+    void HasTimeConflict_ShouldReturnTrueWhenTimeWithConflict1() {
+        manager.updateTask(task1);
+        manager.updateTask(task2);
+        manager.updateSubTask(subTask1);
+        manager.updateSubTask(subTask2);
+
+        // Создаем задачу, которая пересекается по времени
+        Task conflictingTask = new Task("Conflict", "Description");
+        conflictingTask.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 30)); // Начинается во время выполнения task1
+        conflictingTask.setDuration(Duration.ofHours(1));
+
+        assertThrows(TimeIntersectionException.class,
+                () -> manager.addNewTask(conflictingTask),
+                "Должно выброситься исключение при попытке добавить конфликтную задачу");
+
+
     }
 
 

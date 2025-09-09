@@ -176,7 +176,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private void restoreTask(Task task) {
         Type taskType = task.getType();
-        switch (taskType){
+        switch (taskType) {
             case TASK -> super.addNewTask(task);
             case SUBTASK -> super.addNewSubTask((SubTask) task);
             case EPIC -> super.addNewEpic((Epic) task);

@@ -26,6 +26,5 @@ class ManagersTest {
         Task task2 = new Task("Простая задача1", "Описание простой задачи 1");
         Object expectedTask2id = manager.addNewTask(task2);
         assertInstanceOf(Integer.class, expectedTask2id, "Должен возвращаться ID типа int");
-
     }
 }

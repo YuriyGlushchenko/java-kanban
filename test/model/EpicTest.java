@@ -46,7 +46,7 @@ class EpicTest {
     }
 
     @Test
-    public void statusOfNewEpicWithTwoSubTaskShouldBeNEW() {
+    public void statusOfNewEpicWithTwoNewSubTaskShouldBeNEW() {
         assertEquals(Status.NEW, epic1.getStatus());
     }
 
@@ -59,6 +59,13 @@ class EpicTest {
     @Test
     public void shouldBeEpicStatusIN_PROGRESSWhenSubTaskIsIN_PROGRESS() {
         subTask1.setStatus(Status.IN_PROGRESS);
+        manager.updateSubTask(subTask1);
+        assertEquals(Status.IN_PROGRESS, epic1.getStatus());
+    }
+
+    @Test
+    public void shouldBeEpicStatusIN_PROGRESSWhenOnlyOneSubTaskIsDone() {
+        subTask1.setStatus(Status.DONE);
         manager.updateSubTask(subTask1);
         assertEquals(Status.IN_PROGRESS, epic1.getStatus());
     }
@@ -77,6 +84,15 @@ class EpicTest {
         epic1.deleteSubTaskFromEpic(subTask1Id);
         epic1.deleteSubTaskFromEpic(subTask2Id);
         assertEquals(Status.NEW, epic1.getStatus());
+    }
+
+    @Test
+    public void shouldBeEpicStatusIN_PROGRESSWhenAllSubTaskIsIN_PROGRESS() {
+        subTask1.setStatus(Status.IN_PROGRESS);
+        subTask2.setStatus(Status.IN_PROGRESS);
+        manager.updateSubTask(subTask1);
+        manager.updateSubTask(subTask2);
+        assertEquals(Status.IN_PROGRESS, epic1.getStatus());
     }
 
     @Test
@@ -104,7 +120,7 @@ class EpicTest {
     void calculateDuration_shouldReturnZeroDurationWhenNoSubTasks() {
         epic1.checkEpicState(); // тест через публичный метод, внутри вызывается calculateDuration()
 
-        assertTrue(epic1.getDuration().equals(Duration.ZERO));
+        assertEquals(Duration.ZERO, epic1.getDuration());
     }
 
     @Test

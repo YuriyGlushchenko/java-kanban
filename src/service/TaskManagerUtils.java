@@ -41,14 +41,14 @@ public class TaskManagerUtils {
         Status status = Status.valueOf(data[3]);
         String description = data[4];
         Duration duration = Duration.ofMinutes(Integer.parseInt(data[5]));
-        LocalDateTime startTime = data[6].equals("null")?null:LocalDateTime.parse(data[6], formatter);
+        LocalDateTime startTime = data[6].equals("null") ? null : LocalDateTime.parse(data[6], formatter);
 
         return switch (type) {
             case TASK -> {
                 Task restoredTask = new Task(title, description, id);
                 restoredTask.setStatus(status);
-                if(startTime != null)restoredTask.setStartTime(startTime);
-                if(duration != Duration.ZERO) restoredTask.setDuration(duration);
+                if (startTime != null) restoredTask.setStartTime(startTime);
+                if (duration != Duration.ZERO) restoredTask.setDuration(duration);
                 yield restoredTask;
             }
             case EPIC -> new Epic(title, description, id);
@@ -56,8 +56,8 @@ public class TaskManagerUtils {
                 int parentEpicId = Integer.parseInt(data[7]);
                 SubTask restoredSubTask = new SubTask(title, description, parentEpicId, id);
                 restoredSubTask.setStatus(status);
-                if(startTime != null)restoredSubTask.setStartTime(startTime);
-                if(duration != Duration.ZERO) restoredSubTask.setDuration(duration);
+                if (startTime != null) restoredSubTask.setStartTime(startTime);
+                if (duration != Duration.ZERO) restoredSubTask.setDuration(duration);
                 yield restoredSubTask;
             }
         };

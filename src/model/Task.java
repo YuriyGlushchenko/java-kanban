@@ -88,8 +88,8 @@ public class Task implements Comparable<Task> {
                 '}';
     }
 
-    public LocalDateTime getEndTime(){
-        if (startTime != null){
+    public LocalDateTime getEndTime() {
+        if (startTime != null) {
             return startTime.plus(duration);
         } else {
             return null;

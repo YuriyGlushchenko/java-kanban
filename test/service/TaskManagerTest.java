@@ -9,14 +9,9 @@ import org.junit.jupiter.api.Test;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 abstract class TaskManagerTest<T extends TaskManager> {
     protected T manager;
@@ -59,17 +54,20 @@ abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     public void shouldFindTask2ByTask2Id() {
-        assertEquals(task2, manager.getTaskById(task2Id));
+        assertTrue(manager.getTaskById(task2Id).isPresent());
+        assertEquals(task2, manager.getTaskById(task2Id).get());
     }
 
     @Test
     public void shouldFindEpic1ByEpic1Id() {
-        assertEquals(epic1, manager.getEpicById(epic1Id));
+        assertTrue(manager.getEpicById(epic1Id).isPresent());
+        assertEquals(epic1, manager.getEpicById(epic1Id).get());
     }
 
     @Test
     public void shouldFindSubTask1BySubTask1Id() {
-        assertEquals(subTask1, manager.getSubTaskById(subTask1Id));
+        assertTrue(manager.getSubTaskById(subTask1Id).isPresent());
+        assertEquals(subTask1, manager.getSubTaskById(subTask1Id).get());
     }
 
     @Test
@@ -96,21 +94,25 @@ abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     public void ShouldBeTheSameTaskIfIDsMatch() {
-        Task savedTask = manager.getTaskById(task1Id);
+        Optional<Task> savedTaskOptional = manager.getTaskById(task1Id);
+        assertTrue(savedTaskOptional.isPresent());
+        Task savedTask = savedTaskOptional.get();
         assertNotNull(savedTask, "Задача не найдена.");
         assertEquals(task1, savedTask, "Задачи не совпадают.");
     }
 
     @Test
     public void ShouldBeTheSameEpicIfIDsMatch() {
-        Task savedEpic = manager.getEpicById(epic1Id);
+        assertTrue(manager.getEpicById(epic1Id).isPresent());
+        Task savedEpic = manager.getEpicById(epic1Id).get();
         assertNotNull(savedEpic, "Задача не найдена.");
         assertEquals(epic1, savedEpic, "Задачи не совпадают.");
     }
 
     @Test
     public void ShouldBeTheSameSubTaskIfIDsMatch() {
-        Task savedSubTask = manager.getSubTaskById(subTask1Id);
+        assertTrue(manager.getSubTaskById(subTask1Id).isPresent());
+        Task savedSubTask = manager.getSubTaskById(subTask1Id).get();
         assertNotNull(savedSubTask, "Задача не найдена.");
         assertEquals(subTask1, savedSubTask, "Задачи не совпадают.");
     }
@@ -122,53 +124,50 @@ abstract class TaskManagerTest<T extends TaskManager> {
         Task newTask = new Task(title, description);
         int id = manager.addNewTask(newTask);
 
-        assertEquals(title, manager.getTaskById(id).getTitle());
-        assertEquals(description, manager.getTaskById(id).getDescription());
+        Optional<Task> loadedTaskOptional = manager.getTaskById(id);
+        assertTrue(loadedTaskOptional.isPresent());
+        Task loadedTask = loadedTaskOptional.get();
+
+        assertEquals(title, loadedTask.getTitle());
+        assertEquals(description, loadedTask.getDescription());
     }
 
     @Test
-    void getTaskByIdShouldReturnTask() {
-        Task actualTask = manager.getTaskById(task1Id);
+    void getTaskByIdShouldReturnCorrectOptionalTask() {
+        Optional<Task> actualTaskOptional = manager.getTaskById(task1Id);
+        assertTrue(actualTaskOptional.isPresent());
+        Task actualTask = actualTaskOptional.get();
+
         assertEquals(task1, actualTask, "Метод вернул не ту задачу");
     }
 
     @Test
-    void getTaskByIdShouldThrowWhenTaskDoesNotExist() {
-        assertThrows(
-                NoSuchElementException.class,
-                () -> manager.getTaskById(-11),
-                "Метод должен кидать NoSuchElementException, если задача не найдена"
-        );
+    void getTaskById_ShouldReturnEmptyOptionalWhenTaskDoesNotExist() {
+        assertTrue(manager.getTaskById(-11).isEmpty(), "Optional должен быть пустым у несуществующей задачи");
     }
 
     @Test
     void getEpicByIdShouldReturnEpic() {
-        Epic actualEpic = manager.getEpicById(epic1Id);
+        assertTrue(manager.getEpicById(epic1Id).isPresent());
+        Epic actualEpic = manager.getEpicById(epic1Id).get();
         assertEquals(epic1, actualEpic, "Метод вернул не ту задачу");
     }
 
     @Test
-    void getEpicByIdShouldThrowWhenTaskDoesNotExist() {
-        assertThrows(
-                NoSuchElementException.class,
-                () -> manager.getEpicById(-11),
-                "Метод должен кидать NoSuchElementException, если задача не найдена"
-        );
+    void getEpicById_ShouldReturnEmptyOptionalWhenEpicDoesNotExist() {
+        assertTrue(manager.getEpicById(-11).isEmpty());
     }
 
     @Test
-    void getSubTaskByIdShouldReturnSubTask() {
-        SubTask actualSubTask = manager.getSubTaskById(subTask1Id);
+    void getSubTaskById_ShouldReturnSubTask() {
+        assertTrue(manager.getSubTaskById(subTask1Id).isPresent());
+        SubTask actualSubTask = manager.getSubTaskById(subTask1Id).get();
         assertEquals(subTask1, actualSubTask, "Метод вернул не ту задачу");
     }
 
     @Test
-    void getSubTaskByIdShouldThrowWhenTaskDoesNotExist() {
-        assertThrows(
-                NoSuchElementException.class,
-                () -> manager.getSubTaskById(-11),
-                "Метод должен кидать NoSuchElementException, если задача не найдена"
-        );
+    void getSubTaskById_ShouldReturnEmptyOptionalWhenTaskDoesNotExist() {
+        assertTrue(manager.getSubTaskById(-11).isEmpty());
     }
 
     @Test
@@ -289,7 +288,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
         // Проверяем, что подзадачи удалены из истории, но эпик остался
         List<Task> historyAfter = manager.getHistory();
         assertEquals(1, historyAfter.size(), "В истории должен остаться только эпик");
-        assertEquals(epic1Id, historyAfter.get(0).getId(), "В истории должен остаться эпик");
+        assertEquals(epic1Id, historyAfter.getFirst().getId(), "В истории должен остаться эпик");
     }
 
     @Test

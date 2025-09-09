@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -91,7 +92,9 @@ class FileBackedTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(testFile);
 
         // Проверяем обновленные данные
-        Task loadedTask = loadedManager.getTaskById(task1Id);
+        Optional<Task> loadedTaskOptional = loadedManager.getTaskById(task1Id);
+        assertTrue(loadedTaskOptional.isPresent());
+        Task loadedTask = loadedTaskOptional.get();
         assertEquals("Обновленная задача", loadedTask.getTitle());
         assertEquals("Обновленное описание", loadedTask.getDescription());
         assertEquals(Status.IN_PROGRESS, loadedTask.getStatus());
@@ -166,11 +169,14 @@ class FileBackedTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
 
         // Загружаем из файла и проверяем, что задача сохранилась
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(testFile);
+
         assertEquals(initialSize + 1,
                 loadedManager.getAllTasks().size(),
                 "Задач должно стать на одну больше");
+
+        assertTrue(loadedManager.getTaskById(id).isPresent());
         assertEquals("AutoSave Test",
-                loadedManager.getTaskById(id).getTitle(),
+                loadedManager.getTaskById(id).get().getTitle(),
                 "Добавленная задача должна загрузиться из файла");
     }
 

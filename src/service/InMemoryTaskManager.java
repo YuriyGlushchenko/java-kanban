@@ -8,7 +8,6 @@ import model.Type;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Stream;
 
 public class InMemoryTaskManager implements TaskManager {
     protected final HashMap<Integer, Task> tasks = new HashMap<>();
@@ -57,36 +56,25 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Task getTaskById(int id) {
-        Task requestedTask = tasks.get(id);
-        if (requestedTask != null) {
-            historyManager.add(requestedTask);
-            return requestedTask;
-        } else {
-            throw new NoSuchElementException("Нет задачи с таким id");
-        }
+    public Optional<Task> getTaskById(int id) {
+        Optional<Task> taskOptional = Optional.ofNullable(tasks.get(id));
+        taskOptional.ifPresent(historyManager::add);
+        return taskOptional;
+
     }
 
     @Override
-    public SubTask getSubTaskById(int id) {
-        SubTask requestedSubTask = subTasks.get(id);
-        if (requestedSubTask != null) {
-            historyManager.add(requestedSubTask);
-            return requestedSubTask;
-        } else {
-            throw new NoSuchElementException("Нет задачи с таким id");
-        }
+    public Optional<SubTask> getSubTaskById(int id) {
+        Optional<SubTask> requestedSubTaskOptional = Optional.ofNullable(subTasks.get(id));
+        requestedSubTaskOptional.ifPresent(historyManager::add);
+        return requestedSubTaskOptional;
     }
 
     @Override
-    public Epic getEpicById(int id) {
-        Epic requestedEpic = epics.get(id);
-        if (requestedEpic != null) {
-            historyManager.add(requestedEpic);
-            return requestedEpic;
-        } else {
-            throw new NoSuchElementException("Нет задачи с таким id");
-        }
+    public Optional<Epic> getEpicById(int id) {
+        Optional<Epic> requestedEpicOptional = Optional.ofNullable(epics.get(id));
+        requestedEpicOptional.ifPresent(historyManager::add);
+        return requestedEpicOptional;
     }
 
     @Override

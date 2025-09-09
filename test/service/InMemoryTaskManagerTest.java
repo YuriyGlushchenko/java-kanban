@@ -1,16 +1,15 @@
 package service;
 
-import model.*;
-import org.junit.jupiter.api.BeforeEach;
+import model.Task;
 import org.junit.jupiter.api.Test;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager>{
+class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
 //    private static TaskManager manager;
 //    private static Task task1;
 //    private static int task1Id;
@@ -33,7 +32,7 @@ class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager>{
         return new InMemoryTaskManager();
     }
 
-//    @BeforeEach
+    //    @BeforeEach
 //    public void beforeEach() {
 //        manager = new InMemoryTaskManager();
 //        task1 = new Task("Простая задача1", "Описание простой задачи 1");
@@ -317,5 +316,19 @@ class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager>{
 //        assertEquals(2, historyAfter.size(), "В истории должно быть 2 задач после удаления");
 //        assertTrue(historyAfter.stream().allMatch(t -> t.getType() == Type.TASK), "Задача должна остаться в истории");
 //    }
+    @Test
+    void shouldDetectPartialOverlapAtStart() {
+        Task taskA = new Task("Task 1", "Description 1");
+        taskA.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0));
+        taskA.setDuration(Duration.ofMinutes(30));
+
+        Task taskB = new Task("Task 2", "Description 2");
+        taskB.setStartTime(LocalDateTime.of(2023, 1, 1, 9, 45));
+        taskB.setDuration(Duration.ofMinutes(30));
+
+        assertTrue(manager.isOverlap(taskA, taskB),
+                "Должно быть пересечение при частичном пересечении в начале");
+    }
+
 
 }

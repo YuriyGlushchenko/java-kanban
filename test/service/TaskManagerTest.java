@@ -260,19 +260,16 @@ abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     void deleteNonExistentTask_shouldThrowException() {
-        // Act & Assert
         assertDoesNotThrow(() -> manager.deleteTask(999));
     }
 
     @Test
     void deleteNonExistentSubTask_shouldThrowException() {
-        // Act & Assert
         assertDoesNotThrow(() -> manager.deleteSubTask(999));
     }
 
     @Test
     void deleteNonExistentEpic_shouldThrowException() {
-        // Act & Assert
         assertDoesNotThrow(() -> manager.deleteEpic(999));
     }
 

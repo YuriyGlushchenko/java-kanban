@@ -31,15 +31,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public ArrayList<Epic> getAllEpics() {
         return new ArrayList<>(epics.values());
-
     }
-
-//    public ArrayList<Task> getAllTypesTask() {
-//        ArrayList<Task> allTasks = getAllTasks();
-//        allTasks.addAll(getAllEpics());
-//        allTasks.addAll(getAllSubTasks());
-//        return allTasks;
-//    }
 
     @Override
     public void deleteAllTasks() {
@@ -63,21 +55,6 @@ public class InMemoryTaskManager implements TaskManager {
         epics.clear();
         subTasks.clear();
     }
-
-
-//    public Task getAnyTypeTaskById(int id) {
-//        Optional<? extends Task> requestedTaskOptional = Stream.of(tasks, subTasks, epics)
-//                .filter(hMap -> hMap.containsKey(id))
-//                .map(hMap -> hMap.get(id))
-//                .findFirst();
-//        if (requestedTaskOptional.isPresent()) {
-//            Task requestedTask = requestedTaskOptional.get();
-//            historyManager.add(requestedTask);
-//            return requestedTask;
-//        } else {
-//            throw new NoSuchElementException("Нет задачи с таким id");
-//        }
-//    }
 
     @Override
     public Task getTaskById(int id) {
@@ -112,43 +89,6 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
-
-//    public int addAnyTypeTask(Task newTask) {
-////        if (newTask.getId() == -1) {
-////            int newItemId = ++idCounter;
-////            newTask.setId(newItemId);
-////        }
-//
-//        Type newTaskType = newTask.getType();
-//        switch (newTaskType) {
-//            case TASK -> addNewTask(newTask);
-//            case SUBTASK -> addNewSubTask((SubTask) newTask);
-//            case EPIC -> addNewEpic((Epic) newTask);
-//        }
-//        return newTask.getId();
-//    }
-
-
-
-
-//    public void updateAnyTypeTask(Task task) {
-////        if (hasTimeConflict(task)) return;
-//        Type taskType = task.getType();
-////        if (task.getStartTime().isPresent() && task.getType() != Type.EPIC) {
-////            prioritizedTasks.add(task);
-////        }
-//        switch (taskType) {
-//            case TASK -> updateTask(task);
-//            case SUBTASK -> {
-//                updateSubTask((SubTask) task);
-////                SubTask updatedSubTask = (SubTask) task;
-////                subTasks.put(updatedSubTask.getId(), updatedSubTask);
-////                checkEpicStatusIsChanged(updatedSubTask.getParentEpicId());
-//            }
-//            case EPIC -> updateEpic((Epic) task);
-//        }
-//    }
-
     @Override
     public void updateTask(Task task) {
         if (hasTimeConflict(task)) return;
@@ -170,20 +110,6 @@ public class InMemoryTaskManager implements TaskManager {
     public void updateEpic(Epic epic) {
         epics.put(epic.getId(), epic);
     }
-
-
-//    public void deleteAnyTypeTask(int id) {
-//        Type taskToDeleteType = getAnyTypeTaskById(id).getType();
-//        switch (taskToDeleteType) {
-//            case TASK -> deleteTask(id);
-//            case SUBTASK -> deleteSubTask(id);
-//            case EPIC -> deleteEpic(id);
-//        }
-//    }
-
-//    public void setCounter(int counter) {
-//        this.idCounter = counter;
-//    }
 
     @Override
     public void deleteTask(int id) {
@@ -277,7 +203,7 @@ public class InMemoryTaskManager implements TaskManager {
         epic.checkEpicState();
     }
 
-    private boolean isOverlap(Task task1, Task task2) {
+    boolean isOverlap(Task task1, Task task2) {
         if (task1.getStartTime().isEmpty() || task2.getStartTime().isEmpty()) return false;
         LocalDateTime start1 = task1.getStartTime().get();
         LocalDateTime end1 = task1.getEndTime();
@@ -291,7 +217,7 @@ public class InMemoryTaskManager implements TaskManager {
         } else return true;
     }
 
-    private boolean hasTimeConflict(Task task) {
+    boolean hasTimeConflict(Task task) {
         List<Task> prioritizedTasks = getPrioritizedTasks();
         if (prioritizedTasks.isEmpty()) return false;
         return prioritizedTasks

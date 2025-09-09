@@ -45,38 +45,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         loadedManager.getAllEpics().forEach(System.out::println);
     }
 
-//    @Override
-//    public void clearManager() {
-//        super.clearManager();
-//        save();
-//    }
-
-//    @Override
-//    public int addAnyTypeTask(Task newTask) {
-//        int id = super.addAnyTypeTask(newTask);
-//        save();
-//        return id;
-//    }
-
-
-
-
-
-
-
-
-//    @Override
-//    public void updateAnyTypeTask(Task task) {
-//        super.updateAnyTypeTask(task);
-//        save();
-//    }
-
-//    @Override
-//    public void deleteAnyTypeTask(int id) {
-//        super.deleteAnyTypeTask(id);
-//        save();
-//    }
-
     @Override
     public void deleteAllSubTasks() {
         super.deleteAllSubTasks();
@@ -134,10 +102,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         return newEpicId;
     }
 
-    //            }
-    //            case EPIC -> updateEpic((Epic) task);
-    //        }
-    //    }
     @Override
     public void updateTask(Task task) {
         super.updateTask(task);
@@ -219,7 +183,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
     }
 
-    public void setCounter(int counter) {
+    private void setCounter(int counter) {
         this.idCounter = counter;
     }
 

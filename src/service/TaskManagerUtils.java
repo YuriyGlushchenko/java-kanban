@@ -11,7 +11,6 @@ public class TaskManagerUtils {
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
     public static String convertToString(Task task) {
-//        "id,type,name,status,description,duration,startTime,epic"
         int epicId = -1;
         Type type = task.getType();
         if (type == Type.SUBTASK) {
@@ -32,7 +31,6 @@ public class TaskManagerUtils {
     }
 
     public static Task restoreFromString(String value) {
-//        "id,type,name,status,description,duration,startTime,epic"
         String[] data = value.trim().split(",");
 
         int id = Integer.parseInt(data[0]);

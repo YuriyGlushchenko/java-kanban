@@ -134,8 +134,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     .map(line -> line.split(",")[0]) // Берем id
                     .mapToInt(Integer::parseInt)
                     .max();
-            int maxId = maxIdOptional.orElse(-1);
-            loadedManager.setCounter(maxId);
+            //            loadedManager.setCounter(maxId);
+            loadedManager.idCounter = maxIdOptional.orElse(-1);
 
             // Сначала нужно восстановить все эпики и таски и только потом SubTask, т.к. они содержат ссылки на Epic.
             Map<Boolean, List<String>> taskStrings = Arrays
@@ -182,10 +182,5 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             case EPIC -> super.addNewEpic((Epic) task);
         }
     }
-
-    private void setCounter(int counter) {
-        this.idCounter = counter;
-    }
-
 
 }

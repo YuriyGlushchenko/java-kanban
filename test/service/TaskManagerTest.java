@@ -7,6 +7,8 @@ import model.Type;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -37,8 +39,13 @@ abstract class TaskManagerTest<T extends TaskManager> {
     public void beforeEach() {
         manager = getManager();
         task1 = new Task("Простая задача1", "Описание простой задачи 1");
+        task1.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0));
+        task1.setDuration(Duration.ofHours(1));
         task1Id = manager.addNewTask(task1);
+
         task2 = new Task("Простая задача2", "Описание простой задачи 2");
+        task2.setStartTime(LocalDateTime.of(2023, 1, 1, 11, 0));
+        task2.setDuration(Duration.ofHours(1));
         task2Id = manager.addNewTask(task2);
 
         epic1 = new Epic("Важный эпик1", "Описание эпика 1");
@@ -47,8 +54,13 @@ abstract class TaskManagerTest<T extends TaskManager> {
         epic2Id = manager.addNewEpic(epic2);
 
         subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1Id);
+        subTask1.setStartTime(LocalDateTime.of(2023, 1, 1, 9, 0));
+        subTask1.setDuration(Duration.ofHours(1));
         subTask1Id = manager.addNewSubTask(subTask1);
+
         subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1Id);
+        subTask2.setStartTime(LocalDateTime.of(2023, 1, 1, 13, 0));
+        subTask2.setDuration(Duration.ofHours(2));
         subTask2Id = manager.addNewSubTask(subTask2);
     }
 
@@ -93,7 +105,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    public void ShouldBeTheSameTaskIfIDsMatch() {
+    public void shouldBeTheSameTaskIfIDsMatch() {
         Optional<Task> savedTaskOptional = manager.getTaskById(task1Id);
         assertTrue(savedTaskOptional.isPresent());
         Task savedTask = savedTaskOptional.get();
@@ -102,7 +114,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    public void ShouldBeTheSameEpicIfIDsMatch() {
+    public void shouldBeTheSameEpicIfIDsMatch() {
         assertTrue(manager.getEpicById(epic1Id).isPresent());
         Task savedEpic = manager.getEpicById(epic1Id).get();
         assertNotNull(savedEpic, "Задача не найдена.");
@@ -110,7 +122,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    public void ShouldBeTheSameSubTaskIfIDsMatch() {
+    public void shouldBeTheSameSubTaskIfIDsMatch() {
         assertTrue(manager.getSubTaskById(subTask1Id).isPresent());
         Task savedSubTask = manager.getSubTaskById(subTask1Id).get();
         assertNotNull(savedSubTask, "Задача не найдена.");
@@ -118,7 +130,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    public void TaskShouldRemainUnmodifiedAfterAddingToManager() {
+    public void taskShouldRemainUnmodifiedAfterAddingToManager() {
         String title = "title";
         String description = "description";
         Task newTask = new Task(title, description);
@@ -327,5 +339,78 @@ abstract class TaskManagerTest<T extends TaskManager> {
         SubTask invalidSubTask = new SubTask("Invalid SubTask", "Description", 999);
 
         assertThrows(Exception.class, () -> manager.addNewSubTask(invalidSubTask));
+    }
+
+    @Test
+    void deleteAllEpics_shouldRemoveAllSubtasksFromPrioritizedTasks() {
+        // Проверяем, что подзадачи добавились в prioritizedTasks
+        List<Task> prioritizedBefore = manager.getPrioritizedTasks();
+        assertEquals(4, prioritizedBefore.size(), "Изначально должно быть в prioritizedTasks 4 задачи");
+
+        // Удаляем все эпики
+        manager.deleteAllEpics();
+
+        // Проверяем, что подзадачи удалились из prioritizedTasks
+        List<Task> prioritizedAfter = manager.getPrioritizedTasks();
+        assertEquals(2, prioritizedAfter.size(), "После удаления должно остаться 2 задачи");
+        assertFalse(prioritizedAfter.stream().anyMatch(task -> task.getType() == Type.SUBTASK),
+                "Все подзадачи должны быть удалены из prioritizedTasks");
+    }
+
+    @Test
+    void GetPrioritizedTasks_ShouldReturnTasksInCorrectOrder() {
+        manager.addNewTask(new Task("Пустая задача", "Пустое описание")); // задача без времени дополнительно к 4 уже добавленным
+
+        List<Task> prioritizedTasks = manager.getPrioritizedTasks();
+
+        assertEquals(4, prioritizedTasks.size(), "Должно быть 4 приоритетных задачи");
+        assertEquals(subTask1, prioritizedTasks.get(0), "Первая задача должна быть SubTask1 (раньше по времени)");
+        assertEquals(task1, prioritizedTasks.get(1), "Вторая задача должна быть task1");
+        assertEquals(task2, prioritizedTasks.get(2), "Третяя задача должна быть task2");
+        assertEquals(subTask2, prioritizedTasks.get(3), "Четвертая задача должна быть SubTask2");
+    }
+
+    @Test
+    void GetPrioritizedTasks_ShouldReturnSubTasksInCorrectOrder() {
+        List<Task> prioritizedTasks = manager.getPrioritizedTasks();
+
+        assertEquals(4, prioritizedTasks.size(), "Должно быть 2 приоритетных подзадачи");
+        assertEquals(subTask1, prioritizedTasks.get(0), "Первая подзадача должна быть subTask1 (раньше по времени)");
+        assertEquals(subTask2, prioritizedTasks.get(3), "Вторая подзадача должна быть subTask2");
+    }
+
+    @Test
+    void GetPrioritizedTasks_ShouldReturnMixedTasksInCorrectOrder() {
+        manager.addNewTask(new Task("Пустая задача", "Пустое описание")); // задача без времени
+        manager.updateTask(task1);
+        manager.updateTask(task2);
+        manager.updateSubTask(subTask1);
+        manager.updateSubTask(subTask2);
+
+        List<Task> prioritizedTasks = manager.getPrioritizedTasks();
+
+        assertEquals(4, prioritizedTasks.size(), "Должно быть 4 приоритетных задачи");
+
+        assertEquals(subTask1, prioritizedTasks.get(0)); // 9:00
+        assertEquals(task1, prioritizedTasks.get(1));    // 10:00
+        assertEquals(task2, prioritizedTasks.get(2));    // 11:00
+        assertEquals(subTask2, prioritizedTasks.get(3)); // 13:00
+    }
+
+    @Test
+    void GetPrioritizedTasks_ShouldReturnCorrectTasksWhenDeleteTaskAndSubTask() {
+        manager.updateTask(task1);
+        manager.updateTask(task2);
+        manager.updateSubTask(subTask1);
+        manager.updateSubTask(subTask2);
+
+        manager.deleteTask(task1Id);
+        manager.deleteSubTask(subTask1Id);
+
+        List<Task> prioritizedTasks = manager.getPrioritizedTasks();
+
+        assertEquals(2, prioritizedTasks.size(), "Должна остаться 3 приоритетная задача");
+        assertTrue(prioritizedTasks.contains(task2), "Оставшаяся задача должна быть task2");
+        assertTrue(prioritizedTasks.contains(subTask2), "Оставшаяся задача должна быть task2");
     }
 }

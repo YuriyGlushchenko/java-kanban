@@ -181,7 +181,7 @@ class FileBackedTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
     }
 
     @Test
-    void Save_ThrowsManagerSaveExceptionOnIOException() throws IOException {
+    void save_ShouldThrowManagerSaveExceptionWhenFileIncorrect() throws IOException {
         // Заведомо нерабочий файл = директория
         File readOnlyFile = tempDir.resolve("testttt.csv").toFile();
         Files.createDirectories(readOnlyFile.toPath());

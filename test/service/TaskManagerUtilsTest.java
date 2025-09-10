@@ -55,7 +55,7 @@ class TaskManagerUtilsTest {
     }
 
     @Test
-    public void ShouldCorrectlyConverTaskToString() {
+    public void shouldCorrectlyConverTaskToString() {
         task1.setDuration(Duration.ofMinutes(50));
         task1.setStartTime(LocalDateTime.of(2025, 9, 7, 20, 0));
         String convertedTask = TaskManagerUtils.convertToString(task1);
@@ -64,7 +64,7 @@ class TaskManagerUtilsTest {
     }
 
     @Test
-    public void ShouldCorrectlyConverSubTaskToString() {
+    public void shouldCorrectlyConverSubTaskToString() {
         String convertedTask = TaskManagerUtils.convertToString(subTask1);
         String expected = String.format("%d,SUBTASK,Подзадача 1,NEW,описание подзадачи1,0,null,%d", subTask1Id, epic1Id);
         assertEquals(expected, convertedTask, "Конвертация проходит неправильно");

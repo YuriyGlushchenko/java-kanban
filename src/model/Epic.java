@@ -6,7 +6,7 @@ import java.util.*;
 
 public class Epic extends Task {
     private final HashMap<Integer, SubTask> subTasks = new HashMap<>();
-    LocalDateTime endTime;
+    private LocalDateTime endTime;
 
     public Epic(String title, String description) {
         super(title, description);
@@ -70,24 +70,21 @@ public class Epic extends Task {
                 .allMatch(status -> status == Status.DONE);
     }
 
-    private boolean isInProgress() {
+    private boolean isAllNew() {
         return subTasks
                 .values()
                 .stream()
                 .map(Task::getStatus)
-                .anyMatch(status -> status == Status.DONE || status == Status.IN_PROGRESS); // для пустого потока False
+                .allMatch(status -> status == Status.NEW);
     }
 
     private void checkStatus() {
-        boolean allDone = isAllDone();
-        boolean inProgress = isInProgress();
+        Status newStatus = Status.IN_PROGRESS;
 
-        Status newStatus = Status.NEW;
-
-        if (allDone && !subTasks.isEmpty()) {
+        if (isAllDone() && !subTasks.isEmpty()) {
             newStatus = Status.DONE;
-        } else if (!allDone && inProgress) {
-            newStatus = Status.IN_PROGRESS;
+        } else if (isAllNew()) {
+            newStatus = Status.NEW;
         }
 
         if (getStatus() != newStatus) super.setStatus(newStatus);
@@ -98,7 +95,6 @@ public class Epic extends Task {
                 .values()
                 .stream()
                 .map(Task::getDuration)
-//                .filter(Objects::nonNull)
                 .reduce(Duration::plus);
         actualDurationOptional.ifPresent(super::setDuration);
     }

@@ -7,6 +7,8 @@ import model.Task;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,6 +18,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
     private Task taskA;
     private Task taskB;
+    private Method isOverlapMethod;
+    private Method hasTimeConflictMethod;
 
     @Override
     protected InMemoryTaskManager getManager() {
@@ -23,55 +27,53 @@ class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
     }
 
     @BeforeEach
-    public void beforeEachInMemoryTaskManager() {
+    public void beforeEachInMemoryTaskManager() throws NoSuchMethodException {
         taskA = new Task("Task 1", "Description 1");
         taskB = new Task("Task 2", "Description 2");
 
-        task1.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0));
-        task1.setDuration(Duration.ofHours(1));
+        isOverlapMethod = InMemoryTaskManager.class.getDeclaredMethod("isOverlap", Task.class, Task.class);
+        isOverlapMethod.setAccessible(true);
 
-        task2.setStartTime(LocalDateTime.of(2023, 1, 1, 11, 0));
-        task2.setDuration(Duration.ofHours(1));
+        hasTimeConflictMethod = InMemoryTaskManager.class.getDeclaredMethod("hasTimeConflict", Task.class);
+        hasTimeConflictMethod.setAccessible(true);
+    }
 
-        subTask1.setStartTime(LocalDateTime.of(2023, 1, 1, 9, 0));
-        subTask1.setDuration(Duration.ofHours(1));
-
-        subTask2.setStartTime(LocalDateTime.of(2023, 1, 1, 13, 0));
-        subTask2.setDuration(Duration.ofHours(2));
+    private boolean invokeIsOverlap(Task task1, Task task2) throws Exception {
+        return (Boolean) isOverlapMethod.invoke(manager, task1, task2);
     }
 
     @Test
-    void isOverlap_shouldReturnTrueWhenPartialOverlap() {
+    void isOverlap_shouldReturnTrueWhenPartialOverlap() throws Exception {
         taskA.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0));
         taskA.setDuration(Duration.ofMinutes(30));
 
         taskB.setStartTime(LocalDateTime.of(2023, 1, 1, 9, 45));
         taskB.setDuration(Duration.ofMinutes(30));
 
-        assertTrue(manager.isOverlap(taskA, taskB),
+        assertTrue(invokeIsOverlap(taskA, taskB),
                 "Должно быть пересечение при частичном пересечении");
-        assertTrue(manager.isOverlap(taskB, taskA),
+        assertTrue(invokeIsOverlap(taskB, taskA),
                 "Должно быть пересечение при частичном пересечении");
     }
 
     @Test
-    void isOverlap_shouldReturnFalseWhenEitherTaskHasNoTime() {
+    void isOverlap_shouldReturnFalseWhenEitherTaskHasNoTime() throws Exception {
         Task taskWithTime = new Task("Task 1", "Description 1");
         taskWithTime.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0));
         taskWithTime.setDuration(Duration.ofMinutes(30));
 
-        assertFalse(manager.isOverlap(taskWithTime, taskA),
+        assertFalse(invokeIsOverlap(taskWithTime, taskA),
                 "Не должно быть пересечения, если у второй задачи нет времени");
 
-        assertFalse(manager.isOverlap(taskA, taskWithTime),
+        assertFalse(invokeIsOverlap(taskA, taskWithTime),
                 "Не должно быть пересечения, если у первой задачи нет времени");
 
-        assertFalse(manager.isOverlap(taskA, taskB),
+        assertFalse(invokeIsOverlap(taskA, taskB),
                 "Не должно быть пересечения, если у обеих задач нет времени");
     }
 
     @Test
-    void isOverlap_shouldReturnTrueWhenTimeExactOverlap() {
+    void isOverlap_shouldReturnTrueWhenTimeExactOverlap() throws Exception {
         // Обе задачи: 10:00-10:30
         taskA.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0));
         taskA.setDuration(Duration.ofMinutes(30));
@@ -79,141 +81,80 @@ class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
         taskB.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0));
         taskB.setDuration(Duration.ofMinutes(30));
 
-        assertTrue(manager.isOverlap(taskA, taskB),
+        assertTrue(invokeIsOverlap(taskA, taskB),
                 "Должно быть пересечение при точном совпадении времени");
     }
 
     @Test
-    void isOverlap_shouldReturnTrueWhenTaskCompletelyInsideAnother() {
+    void isOverlap_shouldReturnTrueWhenTaskCompletelyInsideAnother() throws Exception {
         taskA.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0));
         taskA.setDuration(Duration.ofMinutes(60));
 
         taskB.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 10));
         taskB.setDuration(Duration.ofMinutes(30));
 
-        assertTrue(manager.isOverlap(taskA, taskB),
+        assertTrue(invokeIsOverlap(taskA, taskB),
                 "Должно быть пересечение когда одна задача полностью внутри другой по времени");
-        assertTrue(manager.isOverlap(taskB, taskA),
+        assertTrue(invokeIsOverlap(taskB, taskA),
                 "Должно быть пересечение когда одна задача полностью внутри другой по времени");
     }
 
     @Test
-    void isOverlap_shouldReturnTrueWhenWhenTasksAreSeparate() {
+    void isOverlap_shouldReturnTrueWhenWhenTasksAreSeparate() throws Exception {
         taskA.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0));
         taskA.setDuration(Duration.ofMinutes(60));
 
         taskB.setStartTime(LocalDateTime.of(2023, 1, 1, 11, 0));
         taskB.setDuration(Duration.ofMinutes(30));
 
-        assertFalse(manager.isOverlap(taskA, taskB),
+        assertFalse(invokeIsOverlap(taskA, taskB),
                 "Не должно быть пересечения, когда одна задача идет за другой");
-        assertFalse(manager.isOverlap(taskB, taskA),
+        assertFalse(invokeIsOverlap(taskB, taskA),
                 "Не должно быть пересечения, когда одна задача идет за другой");
     }
 
     @Test
-    void isOverlap_shouldReturnFalseWhenTasksAreOnDifferentDays() {
+    void isOverlap_shouldReturnFalseWhenTasksAreOnDifferentDays() throws Exception {
         taskA.setStartTime(LocalDateTime.of(2023, 1, 5, 10, 0));
         taskA.setDuration(Duration.ofMinutes(30));
 
         taskB.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0));
         taskB.setDuration(Duration.ofMinutes(30));
 
-        assertFalse(manager.isOverlap(taskA, taskB),
+        assertFalse(invokeIsOverlap(taskA, taskB),
                 "Не должно быть пересечения при задачах в разные дни");
-        assertFalse(manager.isOverlap(taskB, taskA),
+        assertFalse(invokeIsOverlap(taskB, taskA),
                 "Не должно быть пересечения при задачах в разные дни");
     }
 
     @Test
-    void isOverlap_shouldReturnTrueWhenTasksAreOnDifferentDaysButWithLongDuration() {
+    void isOverlap_shouldReturnTrueWhenTasksAreOnDifferentDaysButWithLongDuration() throws Exception {
         taskA.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0));
         taskA.setDuration(Duration.ofHours(25));
 
         taskB.setStartTime(LocalDateTime.of(2023, 1, 2, 10, 0));
         taskB.setDuration(Duration.ofMinutes(30));
 
-        assertTrue(manager.isOverlap(taskA, taskB),
+        assertTrue(invokeIsOverlap(taskA, taskB),
                 "Должно быть пересечение при задачах в разные дни но с большой длительностью");
-        assertTrue(manager.isOverlap(taskB, taskA),
+        assertTrue(invokeIsOverlap(taskB, taskA),
                 "Должно быть пересечение при задачах в разные дни но с большой длительностью");
     }
 
     @Test
-    void isOverlap_shouldReturnFalseWhenTasksAreOnSameTimeWithZeroDuration() {
+    void isOverlap_shouldReturnFalseWhenTasksAreOnSameTimeWithZeroDuration() throws Exception {
         taskA.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0)); //Duration = 0
 
         taskB.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0)); //Duration = 0
 
-        assertFalse(manager.isOverlap(taskA, taskB),
+        assertFalse(invokeIsOverlap(taskA, taskB),
                 "Не должно быть пересечения при задачах в разные дни");
-        assertFalse(manager.isOverlap(taskB, taskA),
+        assertFalse(invokeIsOverlap(taskB, taskA),
                 "Не должно быть пересечения при задачах в разные дни");
     }
 
     @Test
-    void GetPrioritizedTasks_ShouldReturnTasksInCorrectOrder() {
-        // Добавляем задачи
-        manager.addNewTask(taskA); // задача без времени
-        manager.updateTask(task1);
-        manager.updateTask(task2);
-
-        List<Task> prioritizedTasks = manager.getPrioritizedTasks();
-
-        assertEquals(2, prioritizedTasks.size(), "Должно быть 2 приоритетных задачи");
-        assertEquals(task1, prioritizedTasks.get(0), "Первая задача должна быть task1 (раньше по времени)");
-        assertEquals(task2, prioritizedTasks.get(1), "Вторая задача должна быть task2");
-    }
-
-    @Test
-    void GetPrioritizedTasks_ShouldReturnSubTasksInCorrectOrder() {
-        manager.updateSubTask(subTask1);
-        manager.updateSubTask(subTask2);
-
-        List<Task> prioritizedTasks = manager.getPrioritizedTasks();
-
-        assertEquals(2, prioritizedTasks.size(), "Должно быть 2 приоритетных подзадачи");
-        assertEquals(subTask1, prioritizedTasks.get(0), "Первая подзадача должна быть subTask1 (раньше по времени)");
-        assertEquals(subTask2, prioritizedTasks.get(1), "Вторая подзадача должна быть subTask2");
-    }
-
-    @Test
-    void GetPrioritizedTasks_ShouldReturnMixedTasksInCorrectOrder() {
-        manager.addNewTask(taskA); // задача без времени
-        manager.updateTask(task1);
-        manager.updateTask(task2);
-        manager.updateSubTask(subTask1);
-        manager.updateSubTask(subTask2);
-
-        List<Task> prioritizedTasks = manager.getPrioritizedTasks();
-
-        assertEquals(4, prioritizedTasks.size(), "Должно быть 4 приоритетных задачи");
-
-        assertEquals(subTask1, prioritizedTasks.get(0)); // 9:00
-        assertEquals(task1, prioritizedTasks.get(1));    // 10:00
-        assertEquals(task2, prioritizedTasks.get(2));    // 11:00
-        assertEquals(subTask2, prioritizedTasks.get(3)); // 13:00
-    }
-
-    @Test
-    void GetPrioritizedTasks_ShouldReturnCorrectTasksWhenDeleteTaskAndSubTask() {
-        manager.updateTask(task1);
-        manager.updateTask(task2);
-        manager.updateSubTask(subTask1);
-        manager.updateSubTask(subTask2);
-
-        manager.deleteTask(task1Id);
-        manager.deleteSubTask(subTask1Id);
-
-        List<Task> prioritizedTasks = manager.getPrioritizedTasks();
-
-        assertEquals(2, prioritizedTasks.size(), "Должна остаться 3 приоритетная задача");
-        assertTrue(prioritizedTasks.contains(task2), "Оставшаяся задача должна быть task2");
-        assertTrue(prioritizedTasks.contains(subTask2), "Оставшаяся задача должна быть task2");
-    }
-
-    @Test
-    void HasTimeConflict_ShouldReturnTrueWhenTimeWithConflict() {
+    void HasTimeConflict_ShouldReturnTrueWhenTimeWithConflict() throws InvocationTargetException, IllegalAccessException {
         manager.updateTask(task1);
         manager.updateTask(task2);
         manager.updateSubTask(subTask1);
@@ -224,7 +165,8 @@ class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
         conflictingTask.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 30)); // Начинается во время выполнения task1
         conflictingTask.setDuration(Duration.ofHours(1));
 
-        assertTrue(manager.hasTimeConflict(conflictingTask), "Должен быть конфликт времени");
+//        assertTrue(manager.hasTimeConflict(conflictingTask), "Должен быть конфликт времени");
+        assertTrue((boolean) hasTimeConflictMethod.invoke(manager, conflictingTask), "Должен быть конфликт времени");
     }
 
     @Test

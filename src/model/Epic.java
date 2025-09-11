@@ -1,8 +1,8 @@
 package model;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Epic extends Task {
     private final HashMap<Integer, SubTask> subTasks = new HashMap<>();
@@ -42,24 +42,62 @@ public class Epic extends Task {
         checkStatus();
     }
 
-    public void checkEpicState() {
-        checkStatus();
-        calculateDuration();
-        evaluateStartTime();
-        calculateEndTime();
-    }
-
-    @Override
-    public void setDuration(Duration duration) {
-    }
-
-    @Override
-    public void setStartTime(LocalDateTime startTime) {
-    }
-
     @Override
     public LocalDateTime getEndTime() {
         return endTime;
+    }
+
+//    public void checkEpicState() {
+//        if (subTasks.isEmpty()) {
+//            updateEpicTimes(Duration.ZERO, null, null);
+//            super.setStatus(Status.NEW);
+//            return;
+//        }
+//        checkStatus();
+//
+//        Duration totalDuration = Duration.ZERO;
+//        LocalDateTime earliestStart = null;
+//        LocalDateTime latestEnd = null;
+//        boolean hasTimeData = false;
+//
+//        for (SubTask subTask : subTasks.values()) {
+//            Optional<LocalDateTime> subTaskStartTime = subTask.getStartTime();
+//            LocalDateTime subTaskEndTime = subTask.getEndTime();
+//
+//            if (subTaskStartTime.isPresent() && subTaskEndTime != null) { // надо ли учитывать задачи без времени начала, но с длительностью?
+//                hasTimeData = true;
+//
+//
+//                if (earliestStart == null || subTaskStartTime.get().isBefore(earliestStart)) {
+//                    earliestStart = subTaskStartTime.get();
+//                }
+//
+//                if (latestEnd == null || subTaskEndTime.isAfter(latestEnd)) {
+//                    latestEnd = subTaskEndTime;
+//                }
+//
+//                totalDuration = totalDuration.plus(subTask.getDuration());
+//            }
+//        }
+//
+//        if (hasTimeData) {
+//            updateEpicTimes(totalDuration, earliestStart, latestEnd);
+//        } else {
+//            updateEpicTimes(Duration.ZERO, null, null);
+//        }
+//
+//    }
+
+//    @Override
+//    public void setDuration(Duration duration) {
+//    }
+
+//    @Override
+//    public void setStartTime(LocalDateTime startTime) {
+//    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
 
     private boolean isAllDone() {
@@ -78,7 +116,7 @@ public class Epic extends Task {
                 .allMatch(status -> status == Status.NEW);
     }
 
-    private void checkStatus() {
+    public void checkStatus() {
         Status newStatus = Status.IN_PROGRESS;
 
         if (isAllDone() && !subTasks.isEmpty()) {
@@ -90,35 +128,11 @@ public class Epic extends Task {
         if (getStatus() != newStatus) super.setStatus(newStatus);
     }
 
-    private void calculateDuration() {
-        Optional<Duration> actualDurationOptional = subTasks
-                .values()
-                .stream()
-                .map(Task::getDuration)
-                .reduce(Duration::plus);
-        actualDurationOptional.ifPresent(super::setDuration);
-    }
-
-    private void evaluateStartTime() {
-        Optional<LocalDateTime> actualStartTimeOptional = subTasks
-                .values()
-                .stream()
-                .map(Task::getStartTime)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .min(Comparator.naturalOrder());
-        actualStartTimeOptional.ifPresent(super::setStartTime);
-    }
-
-    private void calculateEndTime() {
-        Optional<LocalDateTime> actualEndTimeOptional = subTasks
-                .values()
-                .stream()
-                .map(Task::getEndTime)
-                .filter(Objects::nonNull)
-                .max(Comparator.naturalOrder());
-        actualEndTimeOptional.ifPresent(d -> this.endTime = d);
-    }
+//    public void updateEpicTimes(Duration duration, LocalDateTime startTime, LocalDateTime endTime) {
+//        super.setDuration(duration);
+//        super.setStartTime(startTime);
+//        this.endTime = endTime;
+//    }
 
 
 }

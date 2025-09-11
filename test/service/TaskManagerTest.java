@@ -39,12 +39,12 @@ abstract class TaskManagerTest<T extends TaskManager> {
     public void beforeEach() {
         manager = getManager();
         task1 = new Task("Простая задача1", "Описание простой задачи 1");
-        task1.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0));
+        task1.setStartTime(LocalDateTime.of(2025, 1, 1, 10, 0));
         task1.setDuration(Duration.ofHours(1));
         task1Id = manager.addNewTask(task1);
 
         task2 = new Task("Простая задача2", "Описание простой задачи 2");
-        task2.setStartTime(LocalDateTime.of(2023, 1, 1, 11, 0));
+        task2.setStartTime(LocalDateTime.of(2025, 1, 1, 11, 0));
         task2.setDuration(Duration.ofHours(1));
         task2Id = manager.addNewTask(task2);
 
@@ -54,12 +54,12 @@ abstract class TaskManagerTest<T extends TaskManager> {
         epic2Id = manager.addNewEpic(epic2);
 
         subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1Id);
-        subTask1.setStartTime(LocalDateTime.of(2023, 1, 1, 9, 0));
+        subTask1.setStartTime(LocalDateTime.of(2025, 1, 1, 9, 0));
         subTask1.setDuration(Duration.ofHours(1));
         subTask1Id = manager.addNewSubTask(subTask1);
 
         subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1Id);
-        subTask2.setStartTime(LocalDateTime.of(2023, 1, 1, 13, 0));
+        subTask2.setStartTime(LocalDateTime.of(2025, 1, 1, 13, 0));
         subTask2.setDuration(Duration.ofHours(2));
         subTask2Id = manager.addNewSubTask(subTask2);
     }
@@ -413,4 +413,94 @@ abstract class TaskManagerTest<T extends TaskManager> {
         assertTrue(prioritizedTasks.contains(task2), "Оставшаяся задача должна быть task2");
         assertTrue(prioritizedTasks.contains(subTask2), "Оставшаяся задача должна быть task2");
     }
+
+    @Test
+    void EpicDurationShouldBeSetToZeroDurationWhenNoSubTasks() {
+        assertEquals(Duration.ZERO, epic2.getDuration());
+    }
+
+    @Test
+    void EpicDurationShouldBeSetToSumOfSubTasksDurations() {
+        assertNotNull(epic1.getDuration());
+        assertEquals(0, epic1.getDuration().toMinutesPart(), "у Эпик1 длительность должна быть 3 часа 0 минут");
+        assertEquals(3, epic1.getDuration().toHours(), "у Эпик1 длительность должна быть 3 часа 0 минут");
+    }
+
+    @Test
+    void epicDurationShouldBeCorrectlySetWhenSubTaskHasNullDurations() {
+        SubTask subTask3 = new SubTask("SubTask 3", "Description 3", epic1.getId()); // duration == null
+        epic1.addSubTaskToEpic(subTask3);
+
+        assertNotNull(epic1.getDuration());
+        assertEquals(Duration.ofMinutes(180), epic1.getDuration());
+    }
+
+    @Test
+    void EpicStartTimeShouldBeSetToEmptyOptionalWhenNoSubTasks() {
+        assertTrue(epic2.getStartTime().isEmpty(), "У эпика без SubTask время начала должно быть null (EmptyOptional)");
+    }
+
+    @Test
+    void EpicStartTimeShouldBeSetToEarliestStartTime() {
+        LocalDateTime earlyTime = LocalDateTime.of(2024, 1, 10, 9, 0);
+
+        SubTask subTask3 = new SubTask("SubTask 3", "Description 3", epic1.getId());
+        subTask3.setStartTime(earlyTime);
+        manager.addNewSubTask(subTask3);
+
+        assertTrue(epic1.getStartTime().isPresent());
+        assertEquals(earlyTime, epic1.getStartTime().get());
+    }
+
+    @Test
+    void EpicStartTimeShouldBeSetToEmptyOptionalWhenAllStartTimesAreNull() {
+        SubTask subTask3 = new SubTask("SubTask 3", "Description 3", epic2.getId());
+
+        manager.addNewSubTask(subTask3);
+
+        SubTask subTask4 = new SubTask("SubTask 4", "Description 4", epic2.getId());
+        manager.addNewSubTask(subTask4);
+
+        assertTrue(epic2.getStartTime().isEmpty());
+    }
+
+    @Test
+    void EpicEndTimeShouldBeSetToToNullWhenNoSubTasks() {
+        assertNull(epic2.getEndTime());
+    }
+
+    @Test
+    void calculateEndTime_shouldSetEndTimeToLatestSubtaskEndTime() {
+        // Подзадача 3: Заканчивается первой
+        SubTask subTask3 = new SubTask("SubTask 3", "Description 3", epic2.getId());
+        LocalDateTime start3 = LocalDateTime.of(2023, 6, 1, 9, 0); // 9:00
+        Duration duration3 = Duration.ofHours(1); // Длительность 1 час
+        LocalDateTime end3 = start3.plus(duration3); // Окончание в 10:00
+        subTask3.setStartTime(start3);
+        subTask3.setDuration(duration3);
+        manager.addNewSubTask(subTask3);
+
+        // Подзадача 4: Заканчивается последней
+        SubTask subTask4 = new SubTask("SubTask 4", "Description 4", epic2.getId());
+        LocalDateTime start4 = LocalDateTime.of(2023, 6, 3, 11, 0); // 11:00
+        Duration duration4 = Duration.ofHours(3); // Длительность 3 часа
+        LocalDateTime expectedEndTime = start4.plus(duration4); // Окончание в 14:00 <- Ожидаемый endTime эпика
+        subTask4.setStartTime(start4);
+        subTask4.setDuration(duration4);
+        manager.addNewSubTask(subTask4);
+
+        // Подзадача 5: Заканчивается посередине
+        SubTask subTask5 = new SubTask("SubTask 5", "Description 5", epic2.getId());
+        LocalDateTime start5 = LocalDateTime.of(2023, 6, 2, 13, 0); // 13:00
+        Duration duration5 = Duration.ofMinutes(30); // Длительность 30 мин
+        LocalDateTime end5 = start5.plus(duration5); // Окончание в 13:30
+        subTask5.setStartTime(start5);
+        subTask5.setDuration(duration5);
+        manager.addNewSubTask(subTask5);
+
+        assertEquals(expectedEndTime,
+                epic2.getEndTime(),
+                "endTime эпика должен быть равен endTime самой поздней подзадачи (subTask4)");
+    }
+
 }

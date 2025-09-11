@@ -2,13 +2,6 @@ package model;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import service.InMemoryTaskManager;
-import service.TaskManager;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.time.Duration;
-import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,11 +15,11 @@ class EpicTest {
     @BeforeEach
     public void beforeEach() {
         // Создаём 2 эпика. У первого будет 2 подзадачи. Второй пустой.
-        epic1 = new Epic("Важный эпик1", "описние эпика 1",1);
-        epic2 = new Epic("Важный эпик2", "описние эпика 2",2);
+        epic1 = new Epic("Важный эпик1", "описние эпика 1", 1);
+        epic2 = new Epic("Важный эпик2", "описние эпика 2", 2);
 
         subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1.getId(), 3);
-        subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1.getId(),4);
+        subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1.getId(), 4);
 
         epic1.addSubTaskToEpic(subTask1);
         epic1.addSubTaskToEpic(subTask2);
@@ -51,14 +44,14 @@ class EpicTest {
     @Test
     public void shouldBeEpicStatusIN_PROGRESSWhenSubTaskIsIN_PROGRESS() {
         subTask1.setStatus(Status.IN_PROGRESS);
-        epic1.checkEpicState();
+        epic1.checkStatus();
         assertEquals(Status.IN_PROGRESS, epic1.getStatus());
     }
 
     @Test
     public void shouldBeEpicStatusIN_PROGRESSWhenOnlyOneSubTaskIsDone() {
         subTask1.setStatus(Status.DONE);
-        epic1.checkEpicState();
+        epic1.checkStatus();
         assertEquals(Status.IN_PROGRESS, epic1.getStatus());
     }
 
@@ -66,7 +59,7 @@ class EpicTest {
     public void shouldBeEpicStatusDONEWhenAllSubTaskIsDONE() {
         subTask1.setStatus(Status.DONE);
         subTask2.setStatus(Status.DONE);
-        epic1.checkEpicState();
+        epic1.checkStatus();
         assertEquals(Status.DONE, epic1.getStatus());
     }
 
@@ -74,7 +67,7 @@ class EpicTest {
     public void shouldBeEpicStatusNEWWhenDeleteAllSubTask() {
         epic1.deleteSubTaskFromEpic(subTask1.getId());
         epic1.deleteSubTaskFromEpic(subTask1.getId());
-        epic1.checkEpicState();
+        epic1.checkStatus();
         assertEquals(Status.NEW, epic1.getStatus());
     }
 
@@ -82,7 +75,7 @@ class EpicTest {
     public void shouldBeEpicStatusIN_PROGRESSWhenAllSubTaskIsIN_PROGRESS() {
         subTask1.setStatus(Status.IN_PROGRESS);
         subTask2.setStatus(Status.IN_PROGRESS);
-        epic1.checkEpicState();
+        epic1.checkStatus();
         assertEquals(Status.IN_PROGRESS, epic1.getStatus());
     }
 
@@ -108,18 +101,20 @@ class EpicTest {
     }
 
 //    @Test
-//    void calculateDuration_shouldReturnZeroDurationWhenNoSubTasks() {
-//        epic1.checkEpicState(); // тест через публичный метод, внутри вызывается calculateDuration()
+//    void checkEpicState_shouldSetZeroDurationWhenNoSubTasks() {
+//        epic1.checkEpicState();
 //
 //        assertEquals(Duration.ZERO, epic1.getDuration());
 //    }
 //
 //    @Test
-//    void calculateDuration_shouldReturnSumOfSubTasksDurations() {
+//    void checkEpicState_shouldSetSumOfSubTasksDurations() {
+//        subTask1.setStartTime(LocalDateTime.of(2025,9,10,22,0));
 //        subTask1.setDuration(Duration.ofHours(2));
+//        subTask2.setStartTime(LocalDateTime.of(2025,9,10,22,0));
 //        subTask2.setDuration(Duration.ofMinutes(90));
 //
-//        epic1.checkEpicState(); // тест через публичный метод, внутри вызывается calculateDuration()
+//        epic1.checkEpicState();
 //
 //        assertNotNull(epic1.getDuration());
 //        assertEquals(Duration.ofMinutes(210), epic1.getDuration());
@@ -128,32 +123,33 @@ class EpicTest {
 //    }
 //
 //    @Test
-//    void calculateDuration_shouldHandleNullDurations() {
+//    void checkEpicState_shouldHandleNullDurations() {
+//        subTask1.setStartTime(LocalDateTime.of(2025,9,10,22,0));
 //        subTask1.setDuration(Duration.ofHours(2));
+//        subTask2.setStartTime(LocalDateTime.of(2025,9,10,22,0));
 //        subTask2.setDuration(Duration.ofMinutes(90));
-//        SubTask subTask3 = new SubTask("SubTask 3", "Description 3", epic1Id);
-//        // duration is null
+//        SubTask subTask3 = new SubTask("SubTask 3", "Description 3", epic1.getId()); // duration == null
 //
 //        epic1.addSubTaskToEpic(subTask3);
 //
-//        epic1.checkEpicState(); // тест через публичный метод, внутри вызывается calculateDuration()
+//        epic1.checkEpicState();
 //
 //        assertNotNull(epic1.getDuration());
 //        assertEquals(Duration.ofMinutes(210), epic1.getDuration());
 //    }
 //
 //    @Test
-//    void evaluateStartTime_shouldReturnEmptyOptionalWhenNoSubTasks() {
+//    void checkEpicState_shouldSetEmptyOptionalWhenNoSubTasks() {
 //        Epic epic = new Epic("Test Epic", "Test Description");
-//        manager.addNewEpic(epic);
-//        epic.checkEpicState();  // тест через публичный метод, внутри вызывается evaluateStartTime()
 //
-//        assertTrue(epic.getStartTime().isEmpty());
+//        epic.checkEpicState();
+//
+//        assertTrue(epic.getStartTime().isEmpty(),"У эпика без SubTask время начала должно быть null (EmptyOptional)");
 //    }
 //
 //    @Test
-//    void evaluateStartTime_shouldReturnEarliestStartTime() {
-//        SubTask subTask3 = new SubTask("SubTask 3", "Description 3", epic1Id);
+//    void checkEpicState_shouldSetEarliestStartTime() {
+//        SubTask subTask3 = new SubTask("SubTask 3", "Description 3", epic1.getId());
 //        LocalDateTime earlyTime = LocalDateTime.of(2024, 1, 10, 9, 0);
 //        LocalDateTime middleTime = LocalDateTime.of(2024, 1, 10, 12, 0);
 //        LocalDateTime lateTime = LocalDateTime.of(2024, 1, 10, 15, 0);
@@ -164,19 +160,15 @@ class EpicTest {
 //
 //        epic1.addSubTaskToEpic(subTask3);
 //
-//        epic1.checkEpicState();  // тест через публичный метод, внутри вызывается evaluateStartTime()
+//        epic1.checkEpicState();
 //
 //        assertTrue(epic1.getStartTime().isPresent());
 //        assertEquals(earlyTime, epic1.getStartTime().get());
 //    }
 //
 //    @Test
-//    void evaluateStartTime_shouldReturnEmptyOptionalWhenAllStartTimesAreNull() throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
-//        // тест через рефлексию
-//        Method calculateDurationMethod = Epic.class.getDeclaredMethod("calculateDuration");
-//        calculateDurationMethod.setAccessible(true);
-//        calculateDurationMethod.invoke(epic1);
-//
+//    void checkEpicState_shouldSetEmptyOptionalWhenAllStartTimesAreNull() {
+//        epic1.checkEpicState();
 //
 //        assertTrue(epic1.getStartTime().isEmpty());
 //    }
@@ -211,7 +203,7 @@ class EpicTest {
 //        LocalDateTime start3 = LocalDateTime.of(2024, 6, 1, 13, 0); // 13:00
 //        Duration duration3 = Duration.ofMinutes(30); // Длительность 30 мин
 //        LocalDateTime end3 = start3.plus(duration3); // Окончание в 13:30
-//        SubTask subTask3 = new SubTask("SubTask 3", "Desc3", epic1Id);
+//        SubTask subTask3 = new SubTask("SubTask 3", "Desc3", epic1.getId());
 //        subTask3.setStartTime(start3);
 //        subTask3.setDuration(duration3);
 //        epic1.addSubTaskToEpic(subTask3);

@@ -45,6 +45,44 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         loadedManager.getAllEpics().forEach(System.out::println);
     }
 
+    public static FileBackedTaskManager loadFromFile(File file) {
+        Path path = file.toPath();
+        FileBackedTaskManager loadedManager = new FileBackedTaskManager(file);
+        try {
+            String content = Files.readString(path); // Чтение всего содержимого файла в одну строку
+            String[] data = content.strip().split("\n");
+            if (data.length == 1) return loadedManager;
+            String[] dataWithoutHeader = Arrays.copyOfRange(data, 1, data.length);
+
+            OptionalInt maxIdOptional = Arrays
+                    .stream(dataWithoutHeader)
+                    .map(line -> line.split(",")[0]) // Берем id
+                    .mapToInt(Integer::parseInt)
+                    .max();
+            //            loadedManager.setCounter(maxId);
+            loadedManager.idCounter = maxIdOptional.orElse(-1);
+
+            // Сначала нужно восстановить все эпики и таски и только потом SubTask, т.к. они содержат ссылки на Epic.
+            Map<Boolean, List<String>> taskStrings = Arrays
+                    .stream(dataWithoutHeader)
+                    .collect(Collectors.partitioningBy(str -> !str.split(",")[1].equals("SUBTASK")));
+
+            taskStrings.get(true) // сначала делаем все эпики и таски
+                    .stream()
+                    .map(TaskManagerUtils::restoreFromString)
+                    .forEach(loadedManager::restoreTask);
+
+            taskStrings.get(false) // потом восстанавливаем SubTask
+                    .stream()
+                    .map(TaskManagerUtils::restoreFromString)
+                    .forEach(loadedManager::restoreTask);
+
+        } catch (IOException e) {
+            throw new ManagerSaveException("Возникла ошибка чтения из файла");
+        }
+        return loadedManager;
+    }
+
     @Override
     public void deleteAllSubTasks() {
         super.deleteAllSubTasks();
@@ -118,44 +156,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     public void updateEpic(Epic epic) {
         super.updateEpic(epic);
         save();
-    }
-
-    public static FileBackedTaskManager loadFromFile(File file) {
-        Path path = file.toPath();
-        FileBackedTaskManager loadedManager = new FileBackedTaskManager(file);
-        try {
-            String content = Files.readString(path); // Чтение всего содержимого файла в одну строку
-            String[] data = content.strip().split("\n");
-            if (data.length == 1) return loadedManager;
-            String[] dataWithoutHeader = Arrays.copyOfRange(data, 1, data.length);
-
-            OptionalInt maxIdOptional = Arrays
-                    .stream(dataWithoutHeader)
-                    .map(line -> line.split(",")[0]) // Берем id
-                    .mapToInt(Integer::parseInt)
-                    .max();
-            //            loadedManager.setCounter(maxId);
-            loadedManager.idCounter = maxIdOptional.orElse(-1);
-
-            // Сначала нужно восстановить все эпики и таски и только потом SubTask, т.к. они содержат ссылки на Epic.
-            Map<Boolean, List<String>> taskStrings = Arrays
-                    .stream(dataWithoutHeader)
-                    .collect(Collectors.partitioningBy(str -> !str.split(",")[1].equals("SUBTASK")));
-
-            taskStrings.get(true) // сначала делаем все эпики и таски
-                    .stream()
-                    .map(TaskManagerUtils::restoreFromString)
-                    .forEach(loadedManager::restoreTask);
-
-            taskStrings.get(false) // потом восстанавливаем SubTask
-                    .stream()
-                    .map(TaskManagerUtils::restoreFromString)
-                    .forEach(loadedManager::restoreTask);
-
-        } catch (IOException e) {
-            throw new ManagerSaveException("Возникла ошибка чтения из файла");
-        }
-        return loadedManager;
     }
 
     private void save() {

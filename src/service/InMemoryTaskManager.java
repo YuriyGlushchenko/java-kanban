@@ -6,6 +6,7 @@ import model.SubTask;
 import model.Task;
 import model.Type;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -14,10 +15,10 @@ public class InMemoryTaskManager implements TaskManager {
     protected final HashMap<Integer, SubTask> subTasks = new HashMap<>();
     protected final HashMap<Integer, Epic> epics = new HashMap<>();
     protected final HistoryManager historyManager = Managers.getDefaultHistory();
-    protected int idCounter = 0;
     protected final TreeSet<Task> prioritizedTasks = new TreeSet<>(
             Comparator.comparing(task -> task.getStartTime().orElse(LocalDateTime.MAX))
     );
+    protected int idCounter = 0;
 
     @Override
     public ArrayList<Task> getAllTasks() {
@@ -190,11 +191,6 @@ public class InMemoryTaskManager implements TaskManager {
         return newEpic.getId();
     }
 
-    private void checkEpicStatusIsChanged(int epicId) {
-        Epic epic = epics.get(epicId);
-        epic.checkEpicState();
-    }
-
     private boolean isOverlap(Task task1, Task task2) {
         if (task1.getStartTime().isEmpty() || task2.getStartTime().isEmpty()) return false;
         LocalDateTime start1 = task1.getStartTime().get();
@@ -202,9 +198,7 @@ public class InMemoryTaskManager implements TaskManager {
         LocalDateTime start2 = task2.getStartTime().get();
         LocalDateTime end2 = task2.getEndTime();
 
-        if(end1.isBefore(start2) || end2.isBefore(start1) || end1.isEqual(start2) || end2.isEqual(start1)){
-            return false;
-        } return true;
+        return !end1.isBefore(start2) && !end2.isBefore(start1) && !end1.isEqual(start2) && !end2.isEqual(start1);
 
     }
 
@@ -214,6 +208,53 @@ public class InMemoryTaskManager implements TaskManager {
         return prioritizedTasks
                 .stream()
                 .anyMatch(task1 -> isOverlap(task1, task));
+    }
+
+    private void checkEpicStatusIsChanged(int epicId) {
+        Epic epic = epics.get(epicId);
+        if (epic.getEpicSubTasks().isEmpty()) {
+            updateEpicTimes(epic, Duration.ZERO, null, null);
+            return;
+        }
+        epic.checkStatus();
+
+        Duration totalDuration = Duration.ZERO;
+        LocalDateTime earliestStart = null;
+        LocalDateTime latestEnd = null;
+        boolean hasTimeData = false;
+
+        for (SubTask subTask : epic.getEpicSubTasks()) {
+            Optional<LocalDateTime> subTaskStartTime = subTask.getStartTime();
+            LocalDateTime subTaskEndTime = subTask.getEndTime();
+
+            if (subTaskStartTime.isPresent() && subTaskEndTime != null) { // надо ли учитывать задачи без времени начала, но с длительностью?
+                hasTimeData = true;
+
+
+                if (earliestStart == null || subTaskStartTime.get().isBefore(earliestStart)) {
+                    earliestStart = subTaskStartTime.get();
+                }
+
+                if (latestEnd == null || subTaskEndTime.isAfter(latestEnd)) {
+                    latestEnd = subTaskEndTime;
+                }
+
+                totalDuration = totalDuration.plus(subTask.getDuration());
+            }
+        }
+
+        if (hasTimeData) {
+            updateEpicTimes(epic, totalDuration, earliestStart, latestEnd);
+        } else {
+            updateEpicTimes(epic, Duration.ZERO, null, null);
+        }
+
+    }
+
+    private void updateEpicTimes(Epic epic, Duration duration, LocalDateTime startTime, LocalDateTime endTime) {
+        epic.setDuration(duration);
+        epic.setStartTime(startTime);
+        epic.setEndTime(endTime);
     }
 
 }

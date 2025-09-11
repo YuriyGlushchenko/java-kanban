@@ -1,8 +1,6 @@
 package service;
 
 import exeptions.TimeIntersectionException;
-import model.Epic;
-import model.SubTask;
 import model.Task;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,7 +9,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -155,37 +152,24 @@ class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
 
     @Test
     void HasTimeConflict_ShouldReturnTrueWhenTimeWithConflict() throws InvocationTargetException, IllegalAccessException {
-        manager.updateTask(task1);
-        manager.updateTask(task2);
-        manager.updateSubTask(subTask1);
-        manager.updateSubTask(subTask2);
-
         // Создаем задачу, которая пересекается по времени
         Task conflictingTask = new Task("Conflict", "Description");
-        conflictingTask.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 30)); // Начинается во время выполнения task1
+        conflictingTask.setStartTime(LocalDateTime.of(2025, 1, 1, 10, 30)); // Начинается во время выполнения task1
         conflictingTask.setDuration(Duration.ofHours(1));
 
-//        assertTrue(manager.hasTimeConflict(conflictingTask), "Должен быть конфликт времени");
         assertTrue((boolean) hasTimeConflictMethod.invoke(manager, conflictingTask), "Должен быть конфликт времени");
     }
 
     @Test
     void HasTimeConflict_ShouldReturnTrueWhenTimeWithConflict1() {
-        manager.updateTask(task1);
-        manager.updateTask(task2);
-        manager.updateSubTask(subTask1);
-        manager.updateSubTask(subTask2);
-
         // Создаем задачу, которая пересекается по времени
         Task conflictingTask = new Task("Conflict", "Description");
-        conflictingTask.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 30)); // Начинается во время выполнения task1
+        conflictingTask.setStartTime(LocalDateTime.of(2025, 1, 1, 10, 30)); // Начинается во время выполнения task1
         conflictingTask.setDuration(Duration.ofHours(1));
 
         assertThrows(TimeIntersectionException.class,
                 () -> manager.addNewTask(conflictingTask),
                 "Должно выброситься исключение при попытке добавить конфликтную задачу");
-
-
     }
 
 

@@ -219,8 +219,8 @@ public class InMemoryTaskManager implements TaskManager {
         epic.checkStatus();
 
         Duration totalDuration = Duration.ZERO;
-        LocalDateTime earliestStart = null;
-        LocalDateTime latestEnd = null;
+        LocalDateTime earliestStart = LocalDateTime.MAX;
+        LocalDateTime latestEnd = LocalDateTime.MIN;
         boolean hasTimeData = false;
 
         for (SubTask subTask : epic.getEpicSubTasks()) {
@@ -231,11 +231,11 @@ public class InMemoryTaskManager implements TaskManager {
                 hasTimeData = true;
 
 
-                if (earliestStart == null || subTaskStartTime.get().isBefore(earliestStart)) {
+                if (subTaskStartTime.get().isBefore(earliestStart)) {
                     earliestStart = subTaskStartTime.get();
                 }
 
-                if (latestEnd == null || subTaskEndTime.isAfter(latestEnd)) {
+                if (subTaskEndTime.isAfter(latestEnd)) {
                     latestEnd = subTaskEndTime;
                 }
 

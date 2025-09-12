@@ -47,55 +47,6 @@ public class Epic extends Task {
         return endTime;
     }
 
-//    public void checkEpicState() {
-//        if (subTasks.isEmpty()) {
-//            updateEpicTimes(Duration.ZERO, null, null);
-//            super.setStatus(Status.NEW);
-//            return;
-//        }
-//        checkStatus();
-//
-//        Duration totalDuration = Duration.ZERO;
-//        LocalDateTime earliestStart = null;
-//        LocalDateTime latestEnd = null;
-//        boolean hasTimeData = false;
-//
-//        for (SubTask subTask : subTasks.values()) {
-//            Optional<LocalDateTime> subTaskStartTime = subTask.getStartTime();
-//            LocalDateTime subTaskEndTime = subTask.getEndTime();
-//
-//            if (subTaskStartTime.isPresent() && subTaskEndTime != null) { // надо ли учитывать задачи без времени начала, но с длительностью?
-//                hasTimeData = true;
-//
-//
-//                if (earliestStart == null || subTaskStartTime.get().isBefore(earliestStart)) {
-//                    earliestStart = subTaskStartTime.get();
-//                }
-//
-//                if (latestEnd == null || subTaskEndTime.isAfter(latestEnd)) {
-//                    latestEnd = subTaskEndTime;
-//                }
-//
-//                totalDuration = totalDuration.plus(subTask.getDuration());
-//            }
-//        }
-//
-//        if (hasTimeData) {
-//            updateEpicTimes(totalDuration, earliestStart, latestEnd);
-//        } else {
-//            updateEpicTimes(Duration.ZERO, null, null);
-//        }
-//
-//    }
-
-//    @Override
-//    public void setDuration(Duration duration) {
-//    }
-
-//    @Override
-//    public void setStartTime(LocalDateTime startTime) {
-//    }
-
     public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
     }
@@ -127,12 +78,5 @@ public class Epic extends Task {
 
         if (getStatus() != newStatus) super.setStatus(newStatus);
     }
-
-//    public void updateEpicTimes(Duration duration, LocalDateTime startTime, LocalDateTime endTime) {
-//        super.setDuration(duration);
-//        super.setStartTime(startTime);
-//        this.endTime = endTime;
-//    }
-
 
 }

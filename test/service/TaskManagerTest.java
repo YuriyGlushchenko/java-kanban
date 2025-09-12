@@ -1,9 +1,7 @@
 package service;
 
-import model.Epic;
-import model.SubTask;
-import model.Task;
-import model.Type;
+import exeptions.TimeIntersectionException;
+import model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -436,12 +434,12 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void EpicStartTimeShouldBeSetToEmptyOptionalWhenNoSubTasks() {
+    void epicStartTimeShouldBeSetToEmptyOptionalWhenNoSubTasks() {
         assertTrue(epic2.getStartTime().isEmpty(), "У эпика без SubTask время начала должно быть null (EmptyOptional)");
     }
 
     @Test
-    void EpicStartTimeShouldBeSetToEarliestStartTime() {
+    void epicStartTimeShouldBeSetToEarliestStartTime() {
         LocalDateTime earlyTime = LocalDateTime.of(2024, 1, 10, 9, 0);
 
         SubTask subTask3 = new SubTask("SubTask 3", "Description 3", epic1.getId());
@@ -453,7 +451,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void EpicStartTimeShouldBeSetToEmptyOptionalWhenAllStartTimesAreNull() {
+    void epicStartTimeShouldBeSetToEmptyOptionalWhenAllStartTimesAreNull() {
         SubTask subTask3 = new SubTask("SubTask 3", "Description 3", epic2.getId());
 
         manager.addNewSubTask(subTask3);
@@ -465,17 +463,16 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void EpicEndTimeShouldBeSetToToNullWhenNoSubTasks() {
+    void epicEndTimeShouldBeSetToToNullWhenNoSubTasks() {
         assertNull(epic2.getEndTime());
     }
 
     @Test
-    void calculateEndTime_shouldSetEndTimeToLatestSubtaskEndTime() {
+    void epicEndTimeShouldBeSetToLatestSubtaskEndTime() {
         // Подзадача 3: Заканчивается первой
         SubTask subTask3 = new SubTask("SubTask 3", "Description 3", epic2.getId());
         LocalDateTime start3 = LocalDateTime.of(2023, 6, 1, 9, 0); // 9:00
         Duration duration3 = Duration.ofHours(1); // Длительность 1 час
-        LocalDateTime end3 = start3.plus(duration3); // Окончание в 10:00
         subTask3.setStartTime(start3);
         subTask3.setDuration(duration3);
         manager.addNewSubTask(subTask3);
@@ -493,7 +490,6 @@ abstract class TaskManagerTest<T extends TaskManager> {
         SubTask subTask5 = new SubTask("SubTask 5", "Description 5", epic2.getId());
         LocalDateTime start5 = LocalDateTime.of(2023, 6, 2, 13, 0); // 13:00
         Duration duration5 = Duration.ofMinutes(30); // Длительность 30 мин
-        LocalDateTime end5 = start5.plus(duration5); // Окончание в 13:30
         subTask5.setStartTime(start5);
         subTask5.setDuration(duration5);
         manager.addNewSubTask(subTask5);
@@ -503,4 +499,186 @@ abstract class TaskManagerTest<T extends TaskManager> {
                 "endTime эпика должен быть равен endTime самой поздней подзадачи (subTask4)");
     }
 
+    @Test
+    public void statusOfNewEpicShouldBeNEW() {
+        assertEquals(Status.NEW, epic2.getStatus());
+    }
+
+    @Test
+    public void statusOfNewEpicWithTwoNewSubTaskShouldBeNEW() {
+        assertEquals(Status.NEW, epic1.getStatus());
+    }
+
+    @Test
+    public void shouldNotChangeEpicStatusManually() {
+        epic1.setStatus(Status.IN_PROGRESS);
+        assertEquals(Status.NEW, epic1.getStatus());
+    }
+
+    @Test
+    public void shouldBeEpicStatusIN_PROGRESSWhenSubTaskIsIN_PROGRESS() {
+        subTask1.setStatus(Status.IN_PROGRESS);
+        manager.updateSubTask(subTask1);
+        assertEquals(Status.IN_PROGRESS, epic1.getStatus());
+    }
+
+    @Test
+    public void shouldBeEpicStatusIN_PROGRESSWhenOnlyOneSubTaskIsDone() {
+        subTask1.setStatus(Status.DONE);
+        manager.updateSubTask(subTask1);
+        assertEquals(Status.IN_PROGRESS, epic1.getStatus());
+    }
+
+    @Test
+    public void shouldBeEpicStatusDONEWhenAllSubTaskIsDONE() {
+        subTask1.setStatus(Status.DONE);
+        subTask2.setStatus(Status.DONE);
+        manager.updateSubTask(subTask1);
+        manager.updateSubTask(subTask2);
+        assertEquals(Status.DONE, epic1.getStatus());
+    }
+
+    @Test
+    public void shouldBeEpicStatusNEWWhenDeleteAllSubTasksFromEpic() {
+        epic1.deleteSubTaskFromEpic(subTask1.getId());
+        epic1.deleteSubTaskFromEpic(subTask1.getId());
+        assertEquals(Status.NEW, epic1.getStatus());
+    }
+
+    @Test
+    public void shouldBeEpicStatusIN_PROGRESSWhenAllSubTaskIsIN_PROGRESS() {
+        subTask1.setStatus(Status.IN_PROGRESS);
+        subTask2.setStatus(Status.IN_PROGRESS);
+        manager.updateSubTask(subTask1);
+        manager.updateSubTask(subTask2);
+        assertEquals(Status.IN_PROGRESS, epic1.getStatus());
+    }
+
+    @Test
+    public void shouldBeEpicStatusNewWhenDeleteOneSubTaskIN_PROGRESSAndOneSubTaskNewRemain() {
+        subTask1.setStatus(Status.IN_PROGRESS);
+        manager.updateSubTask(subTask1);
+        assertEquals(Status.IN_PROGRESS, epic1.getStatus());
+
+        manager.deleteSubTask(subTask1.getId());
+
+        assertEquals(Status.NEW, epic1.getStatus());
+    }
+
+    @Test
+    public void shouldBeEpicStatusIN_PROGRESSWhenStatusWasDONEAndThenAddNewSubTask() {
+        subTask1.setStatus(Status.DONE);
+        subTask2.setStatus(Status.DONE);
+        manager.updateSubTask(subTask1);
+        manager.updateSubTask(subTask2);
+        assertEquals(Status.DONE, epic1.getStatus());
+
+        SubTask subTask3 = new SubTask("Подзадача 3", "описание подзадачи3", epic1.getId());
+        subTask3.setStartTime(LocalDateTime.of(2020, 1, 1, 13, 0));
+        subTask3.setDuration(Duration.ofHours(2));
+        manager.addNewSubTask(subTask3);
+
+        assertEquals(Status.IN_PROGRESS, epic1.getStatus());
+    }
+
+    @Test
+    void shouldBeTimeConflictWhenAddTaskWithPartialOverlap() {
+        Task taskA = new Task("Task 1", "Description 1");
+        taskA.setStartTime(LocalDateTime.of(2025, 1, 1, 14, 0));
+        taskA.setDuration(Duration.ofMinutes(180));
+
+        assertThrows(TimeIntersectionException.class, () -> {
+            manager.addNewTask(taskA);
+        });
+    }
+
+    @Test
+    void shouldNotBeConflictWhenAddTaskWithNoTime() {
+        Task taskWithoutTime = new Task("Task 1", "Description 1");
+
+        assertDoesNotThrow(() -> manager.addNewTask(taskWithoutTime),
+                "Не должно быть пересечения, если у  задачи нет времени");
+    }
+
+    @Test
+    void shouldBeTimeConflictBetweenTaskAndSubTaskWhenAddTaskWithExactOverlap() {
+        Task taskA = new Task("Task 1", "Description 1");
+        taskA.setStartTime(LocalDateTime.of(2025, 1, 1, 13, 0));
+        taskA.setDuration(Duration.ofHours(2));
+
+        assertThrows(TimeIntersectionException.class, () -> {
+                    manager.addNewTask(taskA);
+                },
+                "Должен быть конфликт времени между task и subTask когда они точно совадают по времени");
+    }
+
+    @Test
+    void shouldBeTimeConflictWhenTaskCompletelyInsideAnother() {
+        Task taskA = new Task("Task 1", "Description 1");
+        taskA.setStartTime(LocalDateTime.of(2025, 1, 1, 13, 30));
+        taskA.setDuration(Duration.ofHours(1));
+
+        assertThrows(TimeIntersectionException.class, () -> {
+                    manager.addNewTask(taskA);
+                },
+                "Должен быть конфликт времени между task и subTask когда один внутри другого по времени");
+    }
+
+    @Test
+    void shouldNotBeTimeConflictWhenTasksAreSeparate() {
+        Task taskA = new Task("Task 1", "Description 1");
+        taskA.setStartTime(LocalDateTime.of(2025, 1, 1, 20, 30));
+        taskA.setDuration(Duration.ofHours(1));
+
+        assertDoesNotThrow(() -> manager.addNewTask(taskA), "Не должно быть конфликтов у непересекающихся задач");
+    }
+
+    @Test
+    void shouldNotBeTimeConflictWhenTasksAreOnDifferentDays() {
+        Task taskA = new Task("Task 1", "Description 1");
+        taskA.setStartTime(LocalDateTime.of(2025, 1, 2, 13, 0));
+        taskA.setDuration(Duration.ofHours(2));
+
+        assertDoesNotThrow(() -> manager.addNewTask(taskA), "Не должно быть конфликтов у задач в разные дни");
+    }
+
+    @Test
+    void shouldNotBeTimeConflictWhenTasksAreOnDifferentDaysWithLongDuration() {
+        Task taskA = new Task("Task 1", "Description 1");
+        taskA.setStartTime(LocalDateTime.of(2024, 12, 31, 8, 0));
+        taskA.setDuration(Duration.ofHours(25));
+
+        assertDoesNotThrow(() -> manager.addNewTask(taskA),
+                "Не должно быть конфликтов у задач в разные дни даже при большой длительности");
+    }
+
+    @Test
+    void shouldNotBeTimeConflictWhenTasksAreOnSameTimeWithZeroDuration() {
+        Task taskA = new Task("Task A", "Description A");
+        taskA.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0)); //Duration = 0
+
+        Task taskB = new Task("Task B", "Description B");
+        taskB.setStartTime(LocalDateTime.of(2023, 1, 1, 10, 0)); //Duration = 0
+
+        assertDoesNotThrow(() -> manager.addNewTask(taskA),
+                "Не должно быть конфликтов у задач в одно время, но c нулевой длительностью");
+        assertDoesNotThrow(() -> manager.addNewTask(taskB),
+                "Не должно быть конфликтов у задач в одно время, но c нулевой длительностью");
+    }
+
+    @Test
+    void shouldNotBeTimeConflictWhenDeleteTaskAndThenAddNewTaskWithTimeConflictWithDeletedTask() {
+        Task taskA = new Task("Task A", "Description A");
+        taskA.setStartTime(LocalDateTime.of(2025, 1, 1, 10, 0));
+        taskA.setDuration(Duration.ofHours(1));
+        // изначально конфликт есть с task1
+        assertThrows(TimeIntersectionException.class, () -> {
+            manager.addNewTask(taskA);
+        });
+
+        manager.deleteTask(task1.getId()); // убираем одну из конфликтующих задач
+
+        assertDoesNotThrow(() -> manager.addNewTask(taskA),
+                "Не должно быть конфликтов у задачи после удаления конфликтной задачи");
+    }
 }

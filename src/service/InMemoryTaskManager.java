@@ -207,7 +207,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (prioritizedTasks.isEmpty()) return false;
         return prioritizedTasks
                 .stream()
-                .anyMatch(task1 -> isOverlap(task1, task));
+                .anyMatch(task1 -> isOverlap(task1, task) && !task1.equals(task));
     }
 
     private void checkEpicStatusIsChanged(int epicId) {
@@ -227,7 +227,7 @@ public class InMemoryTaskManager implements TaskManager {
             Optional<LocalDateTime> subTaskStartTime = subTask.getStartTime();
             LocalDateTime subTaskEndTime = subTask.getEndTime();
 
-            if (subTaskStartTime.isPresent() && subTaskEndTime != null) { // надо ли учитывать задачи без времени начала, но с длительностью?
+            if (subTaskStartTime.isPresent() && subTaskEndTime != null) {
                 hasTimeData = true;
 
 

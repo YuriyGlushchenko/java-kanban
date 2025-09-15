@@ -1,13 +1,17 @@
 package model;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.Optional;
 
 public class Task {
-    protected Type type;
     private int id = -1;
     private String title;
     private Status status = Status.NEW;
     private String description;
+    private Duration duration = Duration.ZERO;
+    private LocalDateTime startTime;
 
     public Task(String title, String description) {
         this.title = title;
@@ -83,4 +87,29 @@ public class Task {
                 ", status=" + status +
                 '}';
     }
+
+    public LocalDateTime getEndTime() {
+        if (startTime != null) {
+            return startTime.plus(duration);
+        } else {
+            return null;
+        }
+    }
+
+    public Duration getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Duration duration) {
+        this.duration = duration;
+    }
+
+    public Optional<LocalDateTime> getStartTime() {
+        return Optional.ofNullable(startTime);
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
 }

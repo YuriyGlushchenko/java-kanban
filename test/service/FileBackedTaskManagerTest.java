@@ -5,7 +5,6 @@ import model.Epic;
 import model.Status;
 import model.SubTask;
 import model.Task;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -13,60 +12,29 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class FileBackedTaskManagerTest {
-    private static FileBackedTaskManager manager;
-    private static Task task1;
-    private static int task1Id;
-    private static Task task2;
-    private static int task2Id;
-    private static Epic epic1;
-    private static Epic epic2;
-    private static int epic1Id;
-    private static int epic2Id;
-    private static SubTask subTask1;
-    private static SubTask subTask2;
-    private static int subTask1Id;
-    private static int subTask2Id;
+class FileBackedTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
+
     @TempDir
     Path tempDir;
     private File testFile;
 
-    @BeforeEach
-    public void beforeEach() throws IOException {
-        testFile = Files.createTempFile(tempDir, "test", ".csv").toFile();
-        manager = new FileBackedTaskManager(testFile);
-        task1 = new Task("Простая задача1", "Описание простой задачи 1");
-        task1Id = manager.addAnyTypeTask(task1);
-        task2 = new Task("Простая задача2", "Описание простой задачи 2");
-        task2Id = manager.addAnyTypeTask(task2);
+    @Override
+    protected FileBackedTaskManager getManager() {
 
-        epic1 = new Epic("Важный эпик1", "Описание эпика 1");
-        epic2 = new Epic("Важный эпик2", "Описание эпика 2");
-        epic1Id = manager.addAnyTypeTask(epic1);
-        epic2Id = manager.addAnyTypeTask(epic2);
-
-        subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1Id);
-        subTask1Id = manager.addAnyTypeTask(subTask1);
-        subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1Id);
-        subTask2Id = manager.addAnyTypeTask(subTask2);
-    }
-
-    @Test
-    public void ShouldCorrectlyConverTaskToString() {
-        String convertedTask = TaskManagerUtils.convertToString(task1);
-        String expected = String.format("%d,TASK,Простая задача1,NEW,Описание простой задачи 1,", task1Id);
-        assertEquals(expected, convertedTask, "Конвертация проходит неправильно");
-    }
-
-    @Test
-    public void ShouldCorrectlyConverSubTaskToString() {
-        String convertedTask = TaskManagerUtils.convertToString(subTask1);
-        String expected = String.format("%d,SUBTASK,Подзадача 1,NEW,описание подзадачи1,%d", subTask1Id, epic1Id);
-        assertEquals(expected, convertedTask, "Конвертация проходит неправильно");
+        try {
+            testFile = Files.createTempFile(tempDir, "test", ".csv").toFile();
+            testFile.deleteOnExit();
+            return new FileBackedTaskManager(testFile);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to create test file", e);
+        }
     }
 
     @Test
@@ -112,19 +80,25 @@ class FileBackedTaskManagerTest {
     @Test
     void testSaveAndLoadAfterUpdate() {
         // Обновляем задачу
-        Task updatedTask = new Task("Обновленная задача", "Обновленное описание");
-        updatedTask.setId(task1Id);
-        updatedTask.setStatus(Status.IN_PROGRESS);
-        manager.updateTask(updatedTask);
+        task1.setTitle("Обновленная задача");
+        task1.setDescription("Обновленное описание");
+        task1.setStatus(Status.IN_PROGRESS);
+        task1.setStartTime(LocalDateTime.of(2025, 9, 9, 16, 0));
+        task1.setDuration(Duration.ofMinutes(30));
+        manager.updateTask(task1);
 
         // Загружаем из файла
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(testFile);
 
         // Проверяем обновленные данные
-        Task loadedTask = loadedManager.getTaskById(task1Id);
+        Optional<Task> loadedTaskOptional = loadedManager.getTaskById(task1Id);
+        assertTrue(loadedTaskOptional.isPresent());
+        Task loadedTask = loadedTaskOptional.get();
         assertEquals("Обновленная задача", loadedTask.getTitle());
         assertEquals("Обновленное описание", loadedTask.getDescription());
         assertEquals(Status.IN_PROGRESS, loadedTask.getStatus());
+        assertEquals(Duration.ofMinutes(30), loadedTask.getDuration());
+        assertEquals(LocalDateTime.of(2025, 9, 9, 16, 0), loadedTask.getStartTime().orElse(null));
     }
 
     @Test
@@ -139,7 +113,7 @@ class FileBackedTaskManagerTest {
         assertEquals(2, manager.getAllTasks().size());
 
         // Удаляем одну задачу
-        manager.deleteAnyTypeTask(task1Id);
+        manager.deleteTask(task1Id);
 
         // Загружаем из файла
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(testFile);
@@ -151,12 +125,13 @@ class FileBackedTaskManagerTest {
 
     @Test
     void loadFromFile_shouldSetCorrectCounterWhenFileHasTasks() throws IOException {
+//        "id,type,name,status,description,duration,startTime,epic"
         List<String> testData = List.of(
-                "id,type,name,status,description,epic",
-                "1,TASK,Task 1,NEW,Description 1,",
-                "5,EPIC,Epic 1,NEW,Epic description 1,",
-                "10,SUBTASK,SubTask 1,NEW,Sub description 1,5",
-                "3,TASK,Task 2,NEW,Description 2,"
+                "id,type,name,status,description,duration,startTime,epic",
+                "1,TASK,Task 1,NEW,Description 1,0,07.09.2025 20:50,",
+                "5,EPIC,Epic 1,NEW,Epic description 1,10,null,",
+                "10,SUBTASK,SubTask 1,NEW,Sub description 1,60,null,5",
+                "3,TASK,Task 2,NEW,Description 2,50,null,"
         );
         Files.write(testFile.toPath(), testData);
 
@@ -164,7 +139,7 @@ class FileBackedTaskManagerTest {
 
         // Проверяем, что counter у loadedManager установлен корректно (максимальный id = 10)
         Task newTask = new Task("New Task", "New Description");
-        int newId = loadedManager.addAnyTypeTask(newTask);
+        int newId = loadedManager.addNewTask(newTask);
 
         assertEquals(11, newId, "Новый ID должен быть на 1 больше максимального из файла");
     }
@@ -178,9 +153,44 @@ class FileBackedTaskManagerTest {
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(testFile);
 
         Task newTask = new Task("New Task", "New Description");
-        int newId = loadedManager.addAnyTypeTask(newTask);
+        int newId = loadedManager.addNewTask(newTask);
 
         assertEquals(1, newId, "При пустом файле counter должен начинаться с 1");
+    }
+
+    @Test
+    void testAutoSaveOnOperations() {
+        // Проверяем, что операции автоматически сохраняются
+        int initialSize = manager.getAllTasks().size();
+
+        Task newTask = new Task("AutoSave Test", "Description");
+        int id = manager.addNewTask(newTask);
+
+        // Загружаем из файла и проверяем, что задача сохранилась
+        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(testFile);
+
+        assertEquals(initialSize + 1,
+                loadedManager.getAllTasks().size(),
+                "Задач должно стать на одну больше");
+
+        assertTrue(loadedManager.getTaskById(id).isPresent());
+        assertEquals("AutoSave Test",
+                loadedManager.getTaskById(id).get().getTitle(),
+                "Добавленная задача должна загрузиться из файла");
+    }
+
+    @Test
+    void save_ShouldThrowManagerSaveExceptionWhenFileIncorrect() throws IOException {
+        // Заведомо нерабочий файл = директория
+        File readOnlyFile = tempDir.resolve("testttt.csv").toFile();
+        Files.createDirectories(readOnlyFile.toPath());
+
+        FileBackedTaskManager manager = new FileBackedTaskManager(readOnlyFile);
+
+        // внутри вызывается save() -> должно выброситься исключение
+        assertThrows(ManagerSaveException.class, () -> {
+            manager.addNewTask(new Task("Another Task", "Description"));
+        });
     }
 
 }

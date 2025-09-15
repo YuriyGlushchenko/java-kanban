@@ -1,10 +1,12 @@
 package model;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Epic extends Task {
     private final HashMap<Integer, SubTask> subTasks = new HashMap<>();
+    private LocalDateTime endTime;
 
     public Epic(String title, String description) {
         super(title, description);
@@ -27,7 +29,7 @@ public class Epic extends Task {
         return new ArrayList<>(subTasks.values());
     }
 
-    public void removeFromEpicSubTasks(int id) {
+    public void deleteSubTaskFromEpic(int id) {
         subTasks.remove(id);
     }
 
@@ -37,18 +39,16 @@ public class Epic extends Task {
 
     @Override
     public void setStatus(Status status) {
-        boolean allDone = isAllDone();
-        boolean inProgress = isInProgress();
+        checkStatus();
+    }
 
-        Status newStatus = Status.NEW;
+    @Override
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
 
-        if (allDone && !subTasks.isEmpty()) {
-            newStatus = Status.DONE;
-        } else if (!allDone && inProgress) {
-            newStatus = Status.IN_PROGRESS;
-        }
-
-        if (getStatus() != newStatus) super.setStatus(newStatus);
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
 
     private boolean isAllDone() {
@@ -59,13 +59,24 @@ public class Epic extends Task {
                 .allMatch(status -> status == Status.DONE);
     }
 
-    private boolean isInProgress() {
+    private boolean isAllNew() {
         return subTasks
                 .values()
                 .stream()
                 .map(Task::getStatus)
-                .anyMatch(status -> status == Status.DONE || status == Status.IN_PROGRESS); // для пустого потока False
+                .allMatch(status -> status == Status.NEW);
     }
 
+    public void checkStatus() {
+        Status newStatus = Status.IN_PROGRESS;
+
+        if (isAllDone() && !subTasks.isEmpty()) {
+            newStatus = Status.DONE;
+        } else if (isAllNew()) {
+            newStatus = Status.NEW;
+        }
+
+        if (getStatus() != newStatus) super.setStatus(newStatus);
+    }
 
 }

@@ -2,37 +2,27 @@ package model;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import service.InMemoryTaskManager;
-import service.TaskManager;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class EpicTest {
-    private static TaskManager manager;
     private static Epic epic1;
     private static Epic epic2;
-    private static int epic1Id;
-    private static int epic2Id;
 
     private static SubTask subTask1;
     private static SubTask subTask2;
-    private static int subTask1Id;
-    private static int subTask2Id;
 
     @BeforeEach
     public void beforeEach() {
-        manager = new InMemoryTaskManager();
-
         // Создаём 2 эпика. У первого будет 2 подзадачи. Второй пустой.
-        epic1 = new Epic("Важный эпик1", "описние эпика 1");
-        epic2 = new Epic("Важный эпик2", "описние эпика 2");
-        epic1Id = manager.addAnyTypeTask(epic1);
-        epic2Id = manager.addAnyTypeTask(epic2);
+        epic1 = new Epic("Важный эпик1", "описние эпика 1", 1);
+        epic2 = new Epic("Важный эпик2", "описние эпика 2", 2);
 
-        subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1Id);
-        subTask1Id = manager.addAnyTypeTask(subTask1);
-        subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1Id);
-        subTask2Id = manager.addAnyTypeTask(subTask2);
+        subTask1 = new SubTask("Подзадача 1", "описание подзадачи1", epic1.getId(), 3);
+        subTask2 = new SubTask("Подзадача 2", "описание подзадачи2", epic1.getId(), 4);
+
+        epic1.addSubTaskToEpic(subTask1);
+        epic1.addSubTaskToEpic(subTask2);
     }
 
     @Test
@@ -41,7 +31,7 @@ class EpicTest {
     }
 
     @Test
-    public void statusOfNewEpicWithTwoSubTaskShouldBeNEW() {
+    public void statusOfNewEpicWithTwoNewSubTaskShouldBeNEW() {
         assertEquals(Status.NEW, epic1.getStatus());
     }
 
@@ -54,7 +44,14 @@ class EpicTest {
     @Test
     public void shouldBeEpicStatusIN_PROGRESSWhenSubTaskIsIN_PROGRESS() {
         subTask1.setStatus(Status.IN_PROGRESS);
-        manager.updateTask(subTask1);
+        epic1.checkStatus();
+        assertEquals(Status.IN_PROGRESS, epic1.getStatus());
+    }
+
+    @Test
+    public void shouldBeEpicStatusIN_PROGRESSWhenOnlyOneSubTaskIsDone() {
+        subTask1.setStatus(Status.DONE);
+        epic1.checkStatus();
         assertEquals(Status.IN_PROGRESS, epic1.getStatus());
     }
 
@@ -62,16 +59,24 @@ class EpicTest {
     public void shouldBeEpicStatusDONEWhenAllSubTaskIsDONE() {
         subTask1.setStatus(Status.DONE);
         subTask2.setStatus(Status.DONE);
-        manager.updateTask(subTask1);
-        manager.updateTask(subTask2);
+        epic1.checkStatus();
         assertEquals(Status.DONE, epic1.getStatus());
     }
 
     @Test
     public void shouldBeEpicStatusNEWWhenDeleteAllSubTask() {
-        epic1.removeFromEpicSubTasks(subTask1Id);
-        epic1.removeFromEpicSubTasks(subTask2Id);
+        epic1.deleteSubTaskFromEpic(subTask1.getId());
+        epic1.deleteSubTaskFromEpic(subTask1.getId());
+        epic1.checkStatus();
         assertEquals(Status.NEW, epic1.getStatus());
+    }
+
+    @Test
+    public void shouldBeEpicStatusIN_PROGRESSWhenAllSubTaskIsIN_PROGRESS() {
+        subTask1.setStatus(Status.IN_PROGRESS);
+        subTask2.setStatus(Status.IN_PROGRESS);
+        epic1.checkStatus();
+        assertEquals(Status.IN_PROGRESS, epic1.getStatus());
     }
 
     @Test
@@ -80,8 +85,8 @@ class EpicTest {
         assertTrue(epic1.getEpicSubTasks().contains(subTask1));
         assertTrue(epic1.getEpicSubTasks().contains(subTask2));
 
-        epic1.removeFromEpicSubTasks(subTask1Id);
-        epic1.removeFromEpicSubTasks(subTask2Id);
+        epic1.deleteSubTaskFromEpic(subTask1.getId());
+        epic1.deleteSubTaskFromEpic(subTask2.getId());
 
         assertEquals(0, epic1.getEpicSubTasks().size());
         assertFalse(epic1.getEpicSubTasks().contains(subTask1));
@@ -94,6 +99,5 @@ class EpicTest {
         epic2.addSubTaskToEpic(subTask1);
         assertTrue(epic2.getEpicSubTasks().contains(subTask1));
     }
-
 
 }

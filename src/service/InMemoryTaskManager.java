@@ -1,5 +1,6 @@
 package service;
 
+import exeptions.ManagerSaveException;
 import exeptions.TimeIntersectionException;
 import model.Epic;
 import model.SubTask;
@@ -81,7 +82,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void updateTask(Task task) {
-        if (hasTimeConflict(task)) return;
+        if (hasTimeConflict(task)) throw new TimeIntersectionException("Задача не обновлена: пересечение по времени");
         if (task.getType() != Type.TASK) return;
         if (task.getStartTime().isPresent()) prioritizedTasks.add(task);
         tasks.put(task.getId(), task);
@@ -89,7 +90,11 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void updateSubTask(SubTask subTask) {
-        if (hasTimeConflict(subTask)) return;
+        if (hasTimeConflict(subTask))
+            throw new TimeIntersectionException("Задача не обновлена: пересечение по времени");
+        if (subTask.getParentEpicId() == 0 || epics.get(subTask.getParentEpicId()) == null) {
+            throw new ManagerSaveException("У подзадачи должен быть родительский Epic");
+        }
         if (subTask.getStartTime().isPresent()) prioritizedTasks.add(subTask);
         subTasks.put(subTask.getId(), subTask);
         checkEpicStatusIsChanged(subTask.getParentEpicId());
@@ -139,6 +144,8 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public ArrayList<SubTask> getEpicSubTasks(int id) {
+        Epic epic = epics.get(id);
+        if (epic == null) throw new NoSuchElementException("Эпика с таким id не существует в менеджере");
         return epics.get(id).getEpicSubTasks();
     }
 
@@ -174,6 +181,9 @@ public class InMemoryTaskManager implements TaskManager {
     public int addNewSubTask(SubTask newSubTask) {
         if (hasTimeConflict(newSubTask))
             throw new TimeIntersectionException("Задача не добавлена: пересечение по времени");
+        if (newSubTask.getParentEpicId() == 0 || epics.get(newSubTask.getParentEpicId()) == null) {
+            throw new ManagerSaveException("Нельзя добавить подзадачу без привязки к родительскому Epic");
+        }
         setIdToTask(newSubTask);
         subTasks.put(newSubTask.getId(), newSubTask);
         epics.get(newSubTask.getParentEpicId()).addSubTaskToEpic(newSubTask);

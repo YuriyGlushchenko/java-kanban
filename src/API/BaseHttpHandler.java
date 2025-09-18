@@ -9,16 +9,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class BaseHttpHandler {
-    protected record EndpointData(Endpoint endpoint, Optional<Integer> idOptional) {}
-
-    protected void sendText(HttpExchange exchange, String text) throws IOException {
-        byte[] resp = text.getBytes(StandardCharsets.UTF_8);
-        exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
-        exchange.sendResponseHeaders(200, resp.length);
-        exchange.getResponseBody().write(resp);
-        exchange.close();
-    }
-
     protected static EndpointData getEndpoint(String root, String requestPath, String requestMethod) {
         String patternString = String.format("^/%s(/(\\d+))?(/subtasks)?$", root);
         Pattern pattern = Pattern.compile(patternString);
@@ -70,5 +60,47 @@ public class BaseHttpHandler {
             }
         }
         return new EndpointData(Endpoint.UNKNOWN, Optional.empty());
+    }
+
+    protected void sendText(HttpExchange exchange, String text, int statusCode) throws IOException {
+        byte[] resp = text.getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
+        exchange.sendResponseHeaders(statusCode, resp.length);
+        exchange.getResponseBody().write(resp);
+        exchange.close();
+    }
+
+    protected void sendNotFound(HttpExchange exchange) throws IOException {
+        String text = "{" +
+                "\"message\":\"Запрашиваемые данные не найдены\"," +
+                "\"statusCode\":\"404\"," +
+                "\"success\":\"false\"" +
+                "}";
+        sendText(exchange, text, 404);
+    }
+
+    protected void sendUnknownEndpoint(HttpExchange exchange) throws IOException {
+        String text = "{" +
+                "\"message\":\"Такого эндпоинта не существует\"," +
+                "\"statusCode\":\"404\"," +
+                "\"success\":\"false\"" +
+                "}";
+        sendText(exchange, text, 404);
+    }
+
+    protected void sendHasOverlaps(HttpExchange exchange) throws IOException {
+        String text = "{" +
+                "\"message\":\"Задача пересекается по времени с существующей.\"," +
+                "\"statusCode\":\"406\"," +
+                "\"success\":\"false\"" +
+                "}";
+        sendText(exchange, text, 406);
+    }
+
+    protected void sendSuccessfullyDone(HttpExchange exchange, String text, int statusCode) throws IOException {
+        sendText(exchange, text, statusCode);
+    }
+
+    protected record EndpointData(Endpoint endpoint, Optional<Integer> idOptional) {
     }
 }

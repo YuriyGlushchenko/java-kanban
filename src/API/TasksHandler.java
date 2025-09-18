@@ -1,74 +1,102 @@
 package API;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import exeptions.TimeIntersectionException;
 import model.Task;
 import service.TaskManager;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Optional;
 
 public class TasksHandler extends BaseHttpHandler implements HttpHandler {
     private final TaskManager manager;
-    private Gson gson;
+    private final Gson gson;
 
-    public TasksHandler(TaskManager manager, HttpTaskServer httpTaskServer) {
-        this.manager = manager;
+    public TasksHandler(HttpTaskServer httpTaskServer) {
+        this.manager = httpTaskServer.getManager();
         this.gson = httpTaskServer.getGson();
     }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         EndpointData endpointData = getEndpoint("tasks", exchange.getRequestURI().getPath(), exchange.getRequestMethod());
-        switch (endpointData.endpoint()){
-            case GET_TASK_BY_ID -> sendTask(exchange, endpointData.idOptional().get());
-            case GET_TASKS -> System.out.println("Запрос на таски");
+        System.out.println("\nзапрос на: " + exchange.getRequestURI().getPath() + ", метод: " + exchange.getRequestMethod());
+        System.out.println("Endpoint: " + endpointData.endpoint());
+        switch (endpointData.endpoint()) {
+            case GET_TASK_BY_ID -> handleGetTaskById(exchange, endpointData.idOptional().orElse(-999));
+            case GET_TASKS -> handleGetAllTasks(exchange);
             case CREATE_TASK -> handleAddTask(exchange);
+            case UPDATE_TASK -> handleUpdateTask(exchange, endpointData.idOptional().orElse(-999));
+            case DELETE_TASK -> handleDeleteTask(exchange, endpointData.idOptional().orElse(-999));
+            case UNKNOWN -> sendUnknownEndpoint(exchange);
         }
 
     }
 
-    void fortest(){
-        EndpointData data = getEndpoint("epics", "/epics/45", "GET");
-        System.out.println(data.endpoint());
-        System.out.println(data.idOptional().orElse(-999));
-    }
-
-    private void sendTask(HttpExchange exchange, int id) throws IOException {
-//        Gson gson = new GsonBuilder()
-//                .serializeNulls()
-//                .setPrettyPrinting()
-//                // любые другие методы билдера
-//                .create(); // завершаем построение объекта
-        System.out.println("запрос на таcк бай id");
-
+    private void handleGetTaskById(HttpExchange exchange, int id) throws IOException {
         Optional<Task> taskOptional = manager.getTaskById(id);
-        if(taskOptional.isPresent()){
-
+        if (taskOptional.isPresent()) {
             String taskJSON = gson.toJson(taskOptional.get());
-            sendText(exchange, taskJSON);
+            sendSuccessfullyDone(exchange, taskJSON, 200);
         } else {
-            sendText(exchange, gson.toJson("нет такой задачи"));
+            sendNotFound(exchange);
         }
     }
 
     private void handleAddTask(HttpExchange exchange) throws IOException {
-        System.out.println("запрос на добавление таск");
         InputStream inputStream = exchange.getRequestBody();
         String bodyJson = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-//        System.out.println(bodyJson);
         Task task = gson.fromJson(bodyJson, Task.class);
-//        System.out.println(task);
-        manager.addNewTask(task);
-        exchange.sendResponseHeaders(200,0);
-        OutputStream os = exchange.getResponseBody();
-        os.close();
 
-
+        try {
+            int id = manager.addNewTask(task);
+            Optional<Task> loadedTaskOptional = manager.getTaskById(id);
+            if (loadedTaskOptional.isPresent()) {
+                String loadedTaskJson = gson.toJson(loadedTaskOptional.get());
+                sendSuccessfullyDone(exchange, loadedTaskJson, 201);
+            }
+        } catch (TimeIntersectionException e) {
+            sendHasOverlaps(exchange);
+        }
     }
+
+    private void handleGetAllTasks(HttpExchange exchange) throws IOException {
+        List<Task> taskList = manager.getAllTasks();
+        String taskListJson = gson.toJson(taskList);
+        sendSuccessfullyDone(exchange, taskListJson, 200);
+    }
+
+    private void handleUpdateTask(HttpExchange exchange, int id) throws IOException {
+        InputStream inputStream = exchange.getRequestBody();
+        String bodyJson = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        Task task = gson.fromJson(bodyJson, Task.class);
+
+        try {
+            manager.updateTask(task);
+            Optional<Task> loadedTaskOptional = manager.getTaskById(id);
+            if (loadedTaskOptional.isPresent()) {
+                String loadedTaskJson = gson.toJson(loadedTaskOptional.get());
+                sendSuccessfullyDone(exchange, loadedTaskJson, 200);
+            }
+        } catch (TimeIntersectionException e) {
+            sendHasOverlaps(exchange);
+        }
+    }
+
+    private void handleDeleteTask(HttpExchange exchange, int id) throws IOException {
+        manager.deleteTask(id);
+        String text = "{" +
+                "\"message\":\"Задача удалена\"," +
+                "\"statusCode\":\"200\"," +
+                "\"success\":\"true\"" +
+                "}";
+        sendSuccessfullyDone(exchange, text, 200);
+    }
+
 }
+

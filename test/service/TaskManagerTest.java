@@ -681,4 +681,10 @@ abstract class TaskManagerTest<T extends TaskManager> {
         assertDoesNotThrow(() -> manager.addNewTask(taskA),
                 "Не должно быть конфликтов у задачи после удаления конфликтной задачи");
     }
+
+    @Test
+    void shouldNotThrowWhenDeleteNotExistingTask() {
+        assertDoesNotThrow(() -> manager.deleteTask(999),
+                "Не должно быть ошибок, если пытаться удалять несуществующую задачу");
+    }
 }

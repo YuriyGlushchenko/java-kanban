@@ -50,7 +50,7 @@ public class BaseHttpHandler {
                         return new EndpointData(Endpoint.CREATE_EPIC, Optional.empty());
                     if (id != null && requestMethod.equals("GET") && !epicSubtasks)
                         return new EndpointData(Endpoint.GET_EPIC_BY_ID, Optional.of(Integer.parseInt(id)));
-                    if (id != null && requestMethod.equals("GET") && epicSubtasks)
+                    if (id != null && requestMethod.equals("GET"))
                         return new EndpointData(Endpoint.GET_EPIC_SUBTASKS, Optional.of(Integer.parseInt(id)));
                     if (id != null && requestMethod.equals("POST"))
                         return new EndpointData(Endpoint.UPDATE_EPIC, Optional.of(Integer.parseInt(id)));

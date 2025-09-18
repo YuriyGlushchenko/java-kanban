@@ -54,14 +54,6 @@ public class SubTasksHandler extends BaseHttpHandler implements HttpHandler {
         InputStream inputStream = exchange.getRequestBody();
         String bodyJson = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
         SubTask subTask = gson.fromJson(bodyJson, SubTask.class);
-//        if(subTask.getParentEpicId() == 0 || manager.getEpicById(subTask.getParentEpicId()).isEmpty()){
-//            String text = "{" +
-//                    "\"message\":\"Задача не добавлена. Возможно, не верно указан parentEpicId\"," +
-//                    "\"statusCode\":\"406\"," +
-//                    "\"success\":\"false\"" +
-//                    "}";
-//            sendText(exchange, text,406);
-//        }
 
         try {
             int id = manager.addNewSubTask(subTask);

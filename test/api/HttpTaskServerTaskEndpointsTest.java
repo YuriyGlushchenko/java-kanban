@@ -1,4 +1,4 @@
-package API;
+package api;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;

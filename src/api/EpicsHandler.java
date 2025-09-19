@@ -1,8 +1,6 @@
 package api;
 
-import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import exeptions.TimeIntersectionException;
 import model.Epic;
 import model.SubTask;
@@ -15,13 +13,11 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
-public class EpicsHandler extends BaseHttpHandler implements HttpHandler {
-    private final TaskManager manager;
-    private final Gson gson;
+public class EpicsHandler extends BaseHttpHandler {
 
-    public EpicsHandler(HttpTaskServer httpTaskServer) {
-        this.manager = httpTaskServer.getManager();
-        this.gson = httpTaskServer.getGson();
+
+    public EpicsHandler(TaskManager manager) {
+        super(manager);
     }
 
     @Override
@@ -45,7 +41,7 @@ public class EpicsHandler extends BaseHttpHandler implements HttpHandler {
         Optional<Epic> epicOptional = manager.getEpicById(id);
         if (epicOptional.isPresent()) {
             String epicJSON = gson.toJson(epicOptional.get());
-            sendSuccessfullyDone(exchange, epicJSON, 200);
+            sendText(exchange, epicJSON, 200);
         } else {
             sendNotFound(exchange);
         }
@@ -57,12 +53,8 @@ public class EpicsHandler extends BaseHttpHandler implements HttpHandler {
         Epic epic = gson.fromJson(bodyJson, Epic.class);
 
         try {
-            int id = manager.addNewEpic(epic);
-            Optional<Epic> loadedEpicOptional = manager.getEpicById(id);
-            if (loadedEpicOptional.isPresent()) {
-                String loadedEpicJson = gson.toJson(loadedEpicOptional.get());
-                sendSuccessfullyDone(exchange, loadedEpicJson, 201);
-            }
+            manager.addNewEpic(epic);
+            sendText(exchange, "", 201);
         } catch (TimeIntersectionException e) {
             sendHasOverlaps(exchange);
         }
@@ -71,7 +63,7 @@ public class EpicsHandler extends BaseHttpHandler implements HttpHandler {
     private void handleGetAllEpics(HttpExchange exchange) throws IOException {
         List<Epic> epicList = manager.getAllEpics();
         String epicListJson = gson.toJson(epicList);
-        sendSuccessfullyDone(exchange, epicListJson, 200);
+        sendText(exchange, epicListJson, 200);
     }
 
     private void handleUpdateEpic(HttpExchange exchange, int id) throws IOException {
@@ -81,11 +73,7 @@ public class EpicsHandler extends BaseHttpHandler implements HttpHandler {
 
         try {
             manager.updateEpic(epic);
-            Optional<Epic> loadedEpicOptional = manager.getEpicById(id);
-            if (loadedEpicOptional.isPresent()) {
-                String loadedEpicJson = gson.toJson(loadedEpicOptional.get());
-                sendSuccessfullyDone(exchange, loadedEpicJson, 200);
-            }
+            sendText(exchange, "", 200);
         } catch (TimeIntersectionException e) {
             sendHasOverlaps(exchange);
         }
@@ -93,19 +81,14 @@ public class EpicsHandler extends BaseHttpHandler implements HttpHandler {
 
     private void handleDeleteEpic(HttpExchange exchange, int id) throws IOException {
         manager.deleteEpic(id);
-        String text = "{" +
-                "\"message\":\"Эпик удален\"," +
-                "\"statusCode\":\"200\"," +
-                "\"success\":\"true\"" +
-                "}";
-        sendSuccessfullyDone(exchange, text, 200);
+        sendText(exchange, "", 200);
     }
 
     private void handleGetEpicSubTasks(HttpExchange exchange, int id) throws IOException {
         try {
             List<SubTask> subTaskList = manager.getEpicSubTasks(id);
             String epicListJson = gson.toJson(subTaskList);
-            sendSuccessfullyDone(exchange, epicListJson, 200);
+            sendText(exchange, epicListJson, 200);
         } catch (NoSuchElementException e) {
             sendNotFound(exchange);
         }

@@ -1,6 +1,10 @@
 package api;
 
+import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import service.Managers;
+import service.TaskManager;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -8,7 +12,15 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class BaseHttpHandler {
+public abstract class BaseHttpHandler implements HttpHandler {
+    protected final TaskManager manager;
+    protected final Gson gson;
+
+    public BaseHttpHandler(TaskManager manager) {
+        this.manager = manager;
+        this.gson = Managers.getGson();
+    }
+
     protected static EndpointData getEndpoint(String root, String requestPath, String requestMethod) {
         String patternString = String.format("^/%s(/(\\d+))?(/subtasks)?$", root);
         Pattern pattern = Pattern.compile(patternString);
@@ -63,10 +75,15 @@ public class BaseHttpHandler {
     }
 
     protected void sendText(HttpExchange exchange, String text, int statusCode) throws IOException {
-        byte[] resp = text.getBytes(StandardCharsets.UTF_8);
-        exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
-        exchange.sendResponseHeaders(statusCode, resp.length);
-        exchange.getResponseBody().write(resp);
+        if (text == null || text.isEmpty()) {
+            exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
+            exchange.sendResponseHeaders(statusCode, -1);
+        } else {
+            byte[] resp = text.getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
+            exchange.sendResponseHeaders(statusCode, resp.length);
+            exchange.getResponseBody().write(resp);
+        }
         exchange.close();
     }
 
@@ -95,10 +112,6 @@ public class BaseHttpHandler {
                 "\"success\":\"false\"" +
                 "}";
         sendText(exchange, text, 406);
-    }
-
-    protected void sendSuccessfullyDone(HttpExchange exchange, String text, int statusCode) throws IOException {
-        sendText(exchange, text, statusCode);
     }
 
     protected record EndpointData(Endpoint endpoint, Optional<Integer> idOptional) {

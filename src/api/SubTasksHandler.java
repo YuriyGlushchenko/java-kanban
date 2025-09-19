@@ -1,8 +1,6 @@
 package api;
 
-import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import exeptions.ManagerSaveException;
 import exeptions.TimeIntersectionException;
 import model.SubTask;
@@ -14,19 +12,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
-public class SubTasksHandler extends BaseHttpHandler implements HttpHandler {
-    private final TaskManager manager;
-    private final Gson gson;
+public class SubTasksHandler extends BaseHttpHandler {
 
-    public SubTasksHandler(HttpTaskServer httpTaskServer) {
-        this.manager = httpTaskServer.getManager();
-        this.gson = httpTaskServer.getGson();
+    public SubTasksHandler(TaskManager manager) {
+        super(manager);
     }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         EndpointData endpointData = getEndpoint("subtasks", exchange.getRequestURI().getPath(), exchange.getRequestMethod());
-        System.out.println("Обработчик SubTasks");
         System.out.println("\nзапрос на: " + exchange.getRequestURI().getPath() + ", метод: " + exchange.getRequestMethod());
         System.out.println("Endpoint: " + endpointData.endpoint());
         switch (endpointData.endpoint()) {
@@ -44,7 +38,7 @@ public class SubTasksHandler extends BaseHttpHandler implements HttpHandler {
         Optional<SubTask> subTaskOptional = manager.getSubTaskById(id);
         if (subTaskOptional.isPresent()) {
             String subTaskJSON = gson.toJson(subTaskOptional.get());
-            sendSuccessfullyDone(exchange, subTaskJSON, 200);
+            sendText(exchange, subTaskJSON, 200);
         } else {
             sendNotFound(exchange);
         }
@@ -57,27 +51,18 @@ public class SubTasksHandler extends BaseHttpHandler implements HttpHandler {
 
         try {
             int id = manager.addNewSubTask(subTask);
-            Optional<SubTask> loadedSubTaskOptional = manager.getSubTaskById(id);
-            if (loadedSubTaskOptional.isPresent()) {
-                String loadedSubTaskJson = gson.toJson(loadedSubTaskOptional.get());
-                sendSuccessfullyDone(exchange, loadedSubTaskJson, 201);
-            }
+            sendText(exchange, "", 201);
         } catch (TimeIntersectionException e) {
             sendHasOverlaps(exchange);
         } catch (ManagerSaveException e) {
-            String text = "{" +
-                    "\"message\":\"" + e.getMessage() + ". Задача не добавлена. Возможно, не верно указан parentEpicId\"," +
-                    "\"statusCode\":\"406\"," +
-                    "\"success\":\"false\"" +
-                    "}";
-            sendText(exchange, text, 406);
+            sendText(exchange, "Возможно, не верно указан id эпика", 406);
         }
     }
 
     private void handleGetAllSubTasks(HttpExchange exchange) throws IOException {
         List<SubTask> subTaskList = manager.getAllSubTasks();
         String subTaskListJson = gson.toJson(subTaskList);
-        sendSuccessfullyDone(exchange, subTaskListJson, 200);
+        sendText(exchange, subTaskListJson, 200);
     }
 
     private void handleUpdateSubTask(HttpExchange exchange, int id) throws IOException {
@@ -87,31 +72,16 @@ public class SubTasksHandler extends BaseHttpHandler implements HttpHandler {
 
         try {
             manager.updateSubTask(subTask);
-            Optional<SubTask> loadedSubTaskOptional = manager.getSubTaskById(id);
-            if (loadedSubTaskOptional.isPresent()) {
-                String loadedSubTaskJson = gson.toJson(loadedSubTaskOptional.get());
-                sendSuccessfullyDone(exchange, loadedSubTaskJson, 200);
-            }
+            sendText(exchange, "", 200);
         } catch (TimeIntersectionException e) {
-
             sendHasOverlaps(exchange);
         } catch (ManagerSaveException e) {
-            String text = "{" +
-                    "\"message\":\"" + e.getMessage() + ". Задача не обновлена. Возможно, не верно указан parentEpicId\"," +
-                    "\"statusCode\":\"406\"," +
-                    "\"success\":\"false\"" +
-                    "}";
-            sendText(exchange, text, 406);
+            sendText(exchange, "Возможно, не верно указан id эпика", 406);
         }
     }
 
     private void handleDeleteSubTask(HttpExchange exchange, int id) throws IOException {
         manager.deleteSubTask(id);
-        String text = "{" +
-                "\"message\":\"Задача удалена\"," +
-                "\"statusCode\":\"200\"," +
-                "\"success\":\"true\"" +
-                "}";
-        sendSuccessfullyDone(exchange, text, 200);
+        sendText(exchange, "", 200);
     }
 }

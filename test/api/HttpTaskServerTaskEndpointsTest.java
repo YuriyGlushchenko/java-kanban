@@ -10,6 +10,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import service.InMemoryTaskManager;
+import service.Managers;
 import service.TaskManager;
 
 import java.io.IOException;
@@ -30,7 +31,7 @@ public class HttpTaskServerTaskEndpointsTest {
     TaskManager manager = new InMemoryTaskManager();
     // передаём его в качестве аргумента в конструктор HttpTaskServer
     HttpTaskServer taskServer = new HttpTaskServer(manager);
-    Gson gson = taskServer.getGson();
+    Gson gson = Managers.getGson();
 
     public HttpTaskServerTaskEndpointsTest() throws IOException {
     }

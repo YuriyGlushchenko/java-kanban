@@ -1,8 +1,6 @@
 package api;
 
-import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import exeptions.TimeIntersectionException;
 import model.Task;
 import service.TaskManager;
@@ -13,13 +11,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
-public class TasksHandler extends BaseHttpHandler implements HttpHandler {
-    private final TaskManager manager;
-    private final Gson gson;
+public class TasksHandler extends BaseHttpHandler {
 
-    public TasksHandler(HttpTaskServer httpTaskServer) {
-        this.manager = httpTaskServer.getManager();
-        this.gson = httpTaskServer.getGson();
+    public TasksHandler(TaskManager manager) {
+        super(manager);
     }
 
     @Override
@@ -42,7 +37,7 @@ public class TasksHandler extends BaseHttpHandler implements HttpHandler {
         Optional<Task> taskOptional = manager.getTaskById(id);
         if (taskOptional.isPresent()) {
             String taskJSON = gson.toJson(taskOptional.get());
-            sendSuccessfullyDone(exchange, taskJSON, 200);
+            sendText(exchange, taskJSON, 200);
         } else {
             sendNotFound(exchange);
         }
@@ -55,11 +50,7 @@ public class TasksHandler extends BaseHttpHandler implements HttpHandler {
 
         try {
             int id = manager.addNewTask(task);
-            Optional<Task> loadedTaskOptional = manager.getTaskById(id);
-            if (loadedTaskOptional.isPresent()) {
-                String loadedTaskJson = gson.toJson(loadedTaskOptional.get());
-                sendSuccessfullyDone(exchange, loadedTaskJson, 201);
-            }
+            sendText(exchange, "", 201);
         } catch (TimeIntersectionException e) {
             sendHasOverlaps(exchange);
         }
@@ -68,7 +59,7 @@ public class TasksHandler extends BaseHttpHandler implements HttpHandler {
     private void handleGetAllTasks(HttpExchange exchange) throws IOException {
         List<Task> taskList = manager.getAllTasks();
         String taskListJson = gson.toJson(taskList);
-        sendSuccessfullyDone(exchange, taskListJson, 200);
+        sendText(exchange, taskListJson, 200);
     }
 
     private void handleUpdateTask(HttpExchange exchange, int id) throws IOException {
@@ -78,11 +69,7 @@ public class TasksHandler extends BaseHttpHandler implements HttpHandler {
 
         try {
             manager.updateTask(task);
-            Optional<Task> loadedTaskOptional = manager.getTaskById(id);
-            if (loadedTaskOptional.isPresent()) {
-                String loadedTaskJson = gson.toJson(loadedTaskOptional.get());
-                sendSuccessfullyDone(exchange, loadedTaskJson, 200);
-            }
+            sendText(exchange, "", 200);
         } catch (TimeIntersectionException e) {
             sendHasOverlaps(exchange);
         }
@@ -90,12 +77,7 @@ public class TasksHandler extends BaseHttpHandler implements HttpHandler {
 
     private void handleDeleteTask(HttpExchange exchange, int id) throws IOException {
         manager.deleteTask(id);
-        String text = "{" +
-                "\"message\":\"Задача удалена\"," +
-                "\"statusCode\":\"200\"," +
-                "\"success\":\"true\"" +
-                "}";
-        sendSuccessfullyDone(exchange, text, 200);
+        sendText(exchange, "", 200);
     }
 
 }
